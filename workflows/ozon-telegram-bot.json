@@ -50,7 +50,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        260,
+        480,
         300
       ],
       "id": "config-set-node-001",
@@ -63,7 +63,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        460,
+        720,
         300
       ],
       "id": "validate-config-node-001",
@@ -76,7 +76,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        460,
+        960,
         300
       ],
       "id": "b2c3d4e5-2345-6789-abcd-ef0123456789",
