@@ -661,10 +661,30 @@
     },
     "Route Message": {
       "main": [
-        [],
+        [
+          {
+            "node": "Generate Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Get File from Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Date Callback",
             "type": "main",
             "index": 0
           }
