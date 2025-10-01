@@ -54,6 +54,20 @@
     },
     {
       "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        420
+      ],
+      "id": "extract-from-file-001",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
         "operation": "get",
         "key": "=ozon:acl:whitelist:{{ $json.user_id }}",
         "propertyName": "value"
@@ -622,34 +636,6 @@
       ],
       "id": "send-date-selection-http",
       "name": "Send Date Selection"
-    },
-    {
-      "parameters": {
-        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/getFile?file_id={{ $('Extract User Data').item.json.document.file_id }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        1780,
-        420
-      ],
-      "id": "download-csv-1",
-      "name": "Get File Path"
-    },
-    {
-      "parameters": {
-        "url": "=https://api.telegram.org/file/bot{{ $('Config').item.json.telegram_bot_token }}/{{ $json.result.file_path }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
-      "position": [
-        2000,
-        420
-      ],
-      "id": "download-csv-2",
-      "name": "Download CSV"
     }
   ],
   "connections": {
