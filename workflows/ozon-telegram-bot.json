@@ -267,39 +267,28 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "chat_id",
-              "value": "={{ $json.chat_id }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.text }}"
-            },
-            {
-              "name": "parse_mode",
-              "value": "Markdown"
-            },
-            {
-              "name": "reply_markup",
-              "value": "={{ JSON.stringify($json.reply_markup) }}"
-            }
-          ]
-        },
-        "options": {}
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "reply_markup": "={{ $json.reply_markup }}",
+          "appendAttribution": false
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
         1780,
         60
       ],
       "id": "c9d0e1f2-9012-3456-1234-567890123456",
-      "name": "Send Menu"
+      "name": "Send Menu",
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
       "parameters": {
@@ -316,39 +305,28 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "chat_id",
-              "value": "={{ $json.chat_id }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.text }}"
-            },
-            {
-              "name": "parse_mode",
-              "value": "Markdown"
-            },
-            {
-              "name": "reply_markup",
-              "value": "={{ JSON.stringify($json.reply_markup) }}"
-            }
-          ]
-        },
-        "options": {}
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "reply_markup": "={{ $json.reply_markup }}",
+          "appendAttribution": false
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
         1780,
         240
       ],
       "id": "e1f2a3b4-1234-5678-3456-789012345678",
-      "name": "Send Menu Response"
+      "name": "Send Menu Response",
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
       "parameters": {
@@ -419,39 +397,28 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "chat_id",
-              "value": "={{ $json.chat_id }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.text }}"
-            },
-            {
-              "name": "parse_mode",
-              "value": "Markdown"
-            },
-            {
-              "name": "reply_markup",
-              "value": "={{ JSON.stringify($json.reply_markup) }}"
-            }
-          ]
-        },
-        "options": {}
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "reply_markup": "={{ $json.reply_markup }}",
+          "appendAttribution": false
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
       "position": [
         2660,
         420
       ],
       "id": "send-date-selection",
-      "name": "Send Date Selection"
+      "name": "Send Date Selection",
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
       "parameters": {
