@@ -270,7 +270,6 @@
         "chatId": "={{ $json.chat_id }}",
         "text": "={{ $json.text }}",
         "additionalFields": {
-          "parse_mode": "Markdown",
           "appendAttribution": false
         },
         "replyMarkup": "inlineKeyboard",
@@ -304,9 +303,9 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[2][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2][0].callback_data }}"
                     }
                   }
                 ]
@@ -348,7 +347,6 @@
         "chatId": "={{ $json.chat_id }}",
         "text": "={{ $json.text }}",
         "additionalFields": {
-          "parse_mode": "Markdown",
           "appendAttribution": false
         },
         "replyMarkup": "inlineKeyboard",
@@ -382,9 +380,9 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[2][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2][0].callback_data }}"
                     }
                   }
                 ]
@@ -480,7 +478,6 @@
         "chatId": "={{ $json.chat_id }}",
         "text": "={{ $json.text }}",
         "additionalFields": {
-          "parse_mode": "Markdown",
           "appendAttribution": false
         },
         "replyMarkup": "inlineKeyboard",
@@ -490,9 +487,9 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[0] ? $json.reply_markup.inline_keyboard[0][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[0][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[0] ? $json.reply_markup.inline_keyboard[0][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[0][0].callback_data }}"
                     }
                   }
                 ]
@@ -502,9 +499,9 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[1][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[1][0].callback_data }}"
                     }
                   }
                 ]
@@ -514,9 +511,9 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[2][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2][0].callback_data }}"
                     }
                   }
                 ]
@@ -526,9 +523,9 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[3] ? $json.reply_markup.inline_keyboard[3][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[3][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[3] ? $json.reply_markup.inline_keyboard[3][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[3][0].callback_data }}"
                     }
                   }
                 ]
@@ -538,9 +535,9 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[4] ? $json.reply_markup.inline_keyboard[4][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[4][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[4] ? $json.reply_markup.inline_keyboard[4][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[4][0].callback_data }}"
                     }
                   }
                 ]
