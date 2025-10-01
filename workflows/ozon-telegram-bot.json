@@ -84,7 +84,6 @@
     },
     {
       "parameters": {
-        "operation": "xlsx",
         "options": {}
       },
       "type": "n8n-nodes-base.extractFromFile",
@@ -574,6 +573,27 @@
       ],
       "id": "send-date-selection-http",
       "name": "Send Date Selection"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Telegram Trigger').first().json.message.document.file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1200,
+        500
+      ],
+      "id": "get-file-telegram-node",
+      "name": "Get File from Telegram",
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     }
   ],
   "connections": {
@@ -641,30 +661,10 @@
     },
     "Route Message": {
       "main": [
+        [],
         [
           {
-            "node": "Generate Main Menu",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Extract from File",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Handle Menu",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Handle Date Callback",
+            "node": "Get File from Telegram",
             "type": "main",
             "index": 0
           }
@@ -863,6 +863,17 @@
         [
           {
             "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File from Telegram": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
             "type": "main",
             "index": 0
           }
