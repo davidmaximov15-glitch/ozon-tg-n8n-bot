@@ -3,19 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "jsCode": "// 🔐 КОНФИГУРАЦИЯ БОТА\n// Измени TELEGRAM_BOT_TOKEN на свой токен от @BotFather\n\nconst TELEGRAM_BOT_TOKEN = \"YOUR_TELEGRAM_BOT_TOKEN_HERE\";\n\n// Инструкция:\n// 1. Открой Telegram и найди @BotFather\n// 2. Отправь /mybots -> выбери бота -> API Token\n// 3. Скопируй токен вида: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\n// 4. Замени YOUR_TELEGRAM_BOT_TOKEN_HERE выше на свой токен\n// 5. Сохрани workflow\n\nreturn [{\n  json: {\n    telegram_bot_token: TELEGRAM_BOT_TOKEN\n  }\n}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        240,
-        100
-      ],
-      "id": "config-node-001",
-      "name": "Config"
-    },
-    {
-      "parameters": {
         "updates": [
           "message",
           "callback_query"
@@ -38,6 +25,49 @@
           "name": "Tg Ozon.Orders bot"
         }
       }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "telegram-bot-token-field",
+              "name": "TELEGRAM_BOT_TOKEN",
+              "value": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
+              "type": "string"
+            },
+            {
+              "id": "superuser-ids-field",
+              "name": "SUPERUSER_IDS",
+              "value": "123456789,987654321",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        300
+      ],
+      "id": "config-set-node-001",
+      "name": "Config"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\n\nconst token = $json.TELEGRAM_BOT_TOKEN;\nconst superusers = $json.SUPERUSER_IDS;\n\n// Проверка токена\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error(`\n❌ TELEGRAM_BOT_TOKEN не настроен!\n\nИнструкция:\n1. Открой Config node (Set Fields)\n2. Найди поле TELEGRAM_BOT_TOKEN\n3. Замени YOUR_TELEGRAM_BOT_TOKEN_HERE на токен от @BotFather\n   Пример: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\n4. Сохрани workflow\n\nКак получить токен:\n- Открой Telegram → @BotFather\n- Команда /mybots → выбери бота → API Token\n  `);\n}\n\n// Проверка superusers\nif (!superusers || superusers.trim() === '') {\n  throw new Error(`\n❌ SUPERUSER_IDS не настроены!\n\nИнструкция:\n1. Открой Config node (Set Fields)\n2. Найди поле SUPERUSER_IDS\n3. Введи Telegram ID супер-пользователей через запятую\n   Пример: 123456789,987654321\n4. Сохрани workflow\n\nКак узнать свой ID:\n- Напиши боту @userinfobot в Telegram\n  `);\n}\n\n// Все проверки пройдены - пропускаем данные дальше\nreturn [$json];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "id": "validate-config-node-001",
+      "name": "Validate Config"
     },
     {
       "parameters": {
@@ -560,7 +590,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -591,7 +621,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -622,7 +652,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -643,7 +673,7 @@
       "main": [
         [
           {
-            "node": "Extract User Data",
+            "node": "Config",
             "type": "main",
             "index": 0
           }
@@ -947,6 +977,28 @@
         [
           {
             "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Validate Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Config": {
+      "main": [
+        [
+          {
+            "node": "Extract User Data",
             "type": "main",
             "index": 0
           }

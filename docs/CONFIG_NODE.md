@@ -4,13 +4,18 @@
 
 **Проблема:** n8n не всегда позволяет настраивать environment variables (особенно в Cloud версии).
 
-**Решение:** Config Node - это Code node в начале workflow, где хранятся все переменные.
+**Решение:** Config Node - это **Set node (Edit Fields)** в цепочке workflow, которая пробрасывает данные насквозь и добавляет переменные конфигурации.
 
 ---
 
 ## 📍 Где находится?
 
-Config node - это **первая нода** в workflow с именем `Config`.
+Config node - это **Set node** после Telegram Trigger с именем `Config`.
+
+**Структура workflow:**
+```
+Telegram Trigger → Config (Set) → Validate Config (Code) → Extract User Data → ...
+```
 
 ---
 
@@ -18,38 +23,34 @@ Config node - это **первая нода** в workflow с именем `Conf
 
 ### 1. Открой workflow в n8n
 
-### 2. Найди Config node (первая нода)
+### 2. Найди Config node (Set node после Telegram Trigger)
 
-### 3. Открой её и отредактируй:
+### 3. Открой её и отредактируй поля:
 
-```javascript
-// 🔐 КОНФИГУРАЦИЯ БОТА
-// Измени TELEGRAM_BOT_TOKEN на свой токен от @BotFather
+**Поле 1: TELEGRAM_BOT_TOKEN**
+- Type: String
+- Value: замени `YOUR_TELEGRAM_BOT_TOKEN_HERE` на свой токен
 
-const TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN_HERE";
+**Поле 2: SUPERUSER_IDS**
+- Type: String  
+- Value: замени на свои Telegram ID через запятую
+- Пример: `123456789,987654321`
 
-// Инструкция:
-// 1. Открой Telegram и найди @BotFather
-// 2. Отправь /mybots -> выбери бота -> API Token
-// 3. Скопируй токен вида: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
-// 4. Замени YOUR_TELEGRAM_BOT_TOKEN_HERE выше на свой токен
-// 5. Сохрани workflow
+### 4. Где взять токен бота?
 
-return [{
-  json: {
-    telegram_bot_token: TELEGRAM_BOT_TOKEN
-  }
-}];
-```
+1. Открой Telegram и найди `@BotFather`
+2. Отправь `/mybots` → выбери бота → API Token
+3. Скопируй токен вида: `1234567890:ABCdefGHIjklMNOpqrsTUVwxyz`
+4. Вставь в поле TELEGRAM_BOT_TOKEN
 
-### 4. Замени `YOUR_TELEGRAM_BOT_TOKEN_HERE` на свой токен
+### 5. Где взять свой Telegram ID?
 
-**Пример:**
-```javascript
-const TELEGRAM_BOT_TOKEN = "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz";
-```
+1. Открой Telegram и найди `@userinfobot`
+2. Отправь `/start`
+3. Бот вернёт твой ID (например: `123456789`)
+4. Вставь в поле SUPERUSER_IDS
 
-### 5. Сохрани workflow
+### 6. Сохрани workflow
 
 ---
 
