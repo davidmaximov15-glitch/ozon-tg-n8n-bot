@@ -519,27 +519,6 @@
     },
     {
       "parameters": {
-        "resource": "file",
-        "fileId": "={{ $json.document.file_id }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1780,
-        420
-      ],
-      "id": "telegram-get-file-001",
-      "name": "Get CSV File",
-      "credentials": {
-        "telegramApi": {
-          "id": "p4dTUZho7h1VsmzM",
-          "name": "Tg Ozon.Orders bot"
-        }
-      }
-    },
-    {
-      "parameters": {
         "jsCode": "// Подготовка сообщения с динамической inline keyboard\n// Входные данные уже содержат chat_id, text, reply_markup из предыдущего Code node\nconst input = $json;\n\n// Используем готовую клавиатуру\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\n\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: {\n      inline_keyboard: inlineKeyboard\n    }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
@@ -630,6 +609,34 @@
       ],
       "id": "send-date-selection-http",
       "name": "Send Date Selection"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getFile?file_id={{ $('Extract User Data').item.json.document.file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1780,
+        420
+      ],
+      "id": "download-csv-1",
+      "name": "Get File Path"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot{{ $env.TELEGRAM_BOT_TOKEN }}/{{ $json.result.file_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2000,
+        420
+      ],
+      "id": "download-csv-2",
+      "name": "Download CSV"
     }
   ],
   "connections": {
@@ -753,7 +760,7 @@
       "main": [
         [
           {
-            "node": "Get CSV File",
+            "node": "Get File Path",
             "type": "main",
             "index": 0
           }
@@ -892,17 +899,6 @@
         ]
       ]
     },
-    "Get CSV File": {
-      "main": [
-        [
-          {
-            "node": "Parse CSV",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Prepare Menu": {
       "main": [
         [
@@ -930,6 +926,28 @@
         [
           {
             "node": "Send Date Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File Path": {
+      "main": [
+        [
+          {
+            "node": "Download CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CSV": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
             "type": "main",
             "index": 0
           }
