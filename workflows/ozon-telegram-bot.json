@@ -58,7 +58,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\n\nconst token = $json.TELEGRAM_BOT_TOKEN;\nconst superusers = $json.SUPERUSER_IDS;\n\n// Проверка токена\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error('❌ TELEGRAM_BOT_TOKEN не настроен в Config node');\n}\n\n// Проверка superusers\nif (!superusers || superusers.trim() === '' || superusers === 'user_id_1,user_id_2') {\n  throw new Error('❌ SUPERUSER_IDS не настроены в Config node (замени user_id_1,user_id_2 на реальные ID)');\n}\n\n// Все проверки пройдены\nreturn [$json];\n"
+        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\n\nconst token = $json.TELEGRAM_BOT_TOKEN;\nconst superusers = $json.SUPERUSER_IDS;\n\n// Проверка токена\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error('❌ TELEGRAM_BOT_TOKEN не настроен в Config node');\n}\n\n// Проверка superusers\nif (!superusers || superusers.trim() === '' || superusers === 'user_id_1,user_id_2') {\n  throw new Error('❌ SUPERUSER_IDS не настроены в Config node (замени user_id_1,user_id_2 на реальные ID)');\n}\n\n// Пропускаем данные дальше включая binary\nreturn [{\n  json: $json,\n  binary: $binary\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -71,7 +71,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract user data\nconst message = $json.message;\nconst callback = $json.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\n\nreturn [{\n  json: {\n    user_id: String(userId),\n    chat_id: String(chatId),\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document\n  }\n}];"
+        "jsCode": "// Extract user data\nconst message = $json.message;\nconst callback = $json.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\n\nreturn [{\n  json: {\n    user_id: String(userId),\n    chat_id: String(chatId),\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document,\n    // Пропускаем все остальные поля\n    ...($json || {})\n  },\n  binary: $binary  // ВАЖНО: пропускаем binary данные!\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
