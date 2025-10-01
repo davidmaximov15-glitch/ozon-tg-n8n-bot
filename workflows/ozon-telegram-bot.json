@@ -39,7 +39,7 @@
             {
               "id": "superuser-ids-field",
               "name": "SUPERUSER_IDS",
-              "value": "123456789,987654321",
+              "value": "user_id_1,user_id_2",
               "type": "string"
             }
           ]
@@ -58,7 +58,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\n\nconst token = $json.TELEGRAM_BOT_TOKEN;\nconst superusers = $json.SUPERUSER_IDS;\n\n// Проверка токена\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error(`\n❌ TELEGRAM_BOT_TOKEN не настроен!\n\nИнструкция:\n1. Открой Config node (Set Fields)\n2. Найди поле TELEGRAM_BOT_TOKEN\n3. Замени YOUR_TELEGRAM_BOT_TOKEN_HERE на токен от @BotFather\n   Пример: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\n4. Сохрани workflow\n\nКак получить токен:\n- Открой Telegram → @BotFather\n- Команда /mybots → выбери бота → API Token\n  `);\n}\n\n// Проверка superusers\nif (!superusers || superusers.trim() === '') {\n  throw new Error(`\n❌ SUPERUSER_IDS не настроены!\n\nИнструкция:\n1. Открой Config node (Set Fields)\n2. Найди поле SUPERUSER_IDS\n3. Введи Telegram ID супер-пользователей через запятую\n   Пример: 123456789,987654321\n4. Сохрани workflow\n\nКак узнать свой ID:\n- Напиши боту @userinfobot в Telegram\n  `);\n}\n\n// Все проверки пройдены - пропускаем данные дальше\nreturn [$json];\n"
+        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\n\nconst token = $json.TELEGRAM_BOT_TOKEN;\nconst superusers = $json.SUPERUSER_IDS;\n\n// Проверка токена\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error(`\n❌ TELEGRAM_BOT_TOKEN не настроен!\n\nИнструкция:\n1. Открой Config node (Set Fields)\n2. Найди поле TELEGRAM_BOT_TOKEN\n3. Замени YOUR_TELEGRAM_BOT_TOKEN_HERE на токен от @BotFather\n   Пример: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\n4. Сохрани workflow\n\nКак получить токен:\n- Открой Telegram → @BotFather\n- Команда /mybots → выбери бота → API Token\n  `);\n}\n\n// Проверка superusers\nif (!superusers || superusers.trim() === '' || superusers === 'user_id_1,user_id_2') {\n  throw new Error(`\n❌ SUPERUSER_IDS не настроены!\n\nИнструкция:\n1. Открой Config node (Set Fields)\n2. Найди поле SUPERUSER_IDS\n3. Замени user_id_1,user_id_2 на реальные Telegram ID через запятую\n   Пример: 123456789,987654321\n4. Сохрани workflow\n\nКак узнать свой ID:\n- Напиши боту @userinfobot в Telegram\n  `);\n}\n\n// Все проверки пройдены - пропускаем данные дальше\nreturn [$json];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -550,7 +550,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Проверка whitelist из Redis\nconst redisValue = $json.value;\n\n// Redis GET возвращает null если ключа нет\n// Проверяем что значение существует и равно \"1\"\nconst isWhitelisted = redisValue !== null && \n                       redisValue !== undefined && \n                       String(redisValue) === \"1\";\n\nreturn [{\n  json: {\n    user_id: $('Extract User Data').item.json.user_id,\n    chat_id: $('Extract User Data').item.json.chat_id,\n    message_text: $('Extract User Data').item.json.message_text,\n    callback_data: $('Extract User Data').item.json.callback_data,\n    document: $('Extract User Data').item.json.document,\n    is_whitelisted: isWhitelisted,\n    redis_value: redisValue\n  }\n}];"
+        "jsCode": "// 🔐 ПРОВЕРКА ДОСТУПА\n\nconst userId = $json.user_id;\nconst configSuperusers = $('Config').item.json.SUPERUSER_IDS || '';\nconst whitelistValue = $json.value; // из Redis Check Whitelist\n\n// Парсим superusers из Config\nconst superuserIds = configSuperusers.split(',').map(id => id.trim()).filter(id => id);\n\n// Проверяем: superuser из Config ИЛИ admin из Redis whitelist\nconst isSuperuser = superuserIds.includes(userId);\nconst isAdmin = whitelistValue === '1';\n\nif (!isSuperuser && !isAdmin) {\n  throw new Error('⛔ Access denied. Only superusers and admins can use this bot.');\n}\n\n// Пользователь авторизован - пропускаем дальше\nreturn [{\n  json: {\n    ...$json,\n    is_superuser: isSuperuser,\n    is_admin: isAdmin\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
