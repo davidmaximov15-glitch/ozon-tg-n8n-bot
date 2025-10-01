@@ -19,7 +19,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract user data\nconst message = $json.message;\nconst callback = $json.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\n\nreturn [{\n  json: {\n    user_id: userId,\n    chat_id: chatId,\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document\n  }\n}];"
+        "jsCode": "// Extract user data\nconst message = $json.message;\nconst callback = $json.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\n\nreturn [{\n  json: {\n    user_id: String(userId),\n    chat_id: String(chatId),\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -29,12 +29,10 @@
     },
     {
       "parameters": {
-        "operation": "sIsMember",
-        "key": "ozon:acl:whitelist",
-        "member": "={{ $json.user_id }}"
+        "jsCode": "// Check whitelist using Redis with credentials\nconst Redis = require('ioredis');\n\nconst userId = $json.user_id;\n\n// Get Redis credentials from n8n\nconst credentials = await this.getCredentials('redis');\n\nconst redis = new Redis({\n  host: credentials.host,\n  port: credentials.port,\n  password: credentials.password || undefined,\n  db: credentials.database || 0\n});\n\ntry {\n  const isMember = await redis.sismember('ozon:acl:whitelist', userId);\n  await redis.quit();\n  \n  return [{\n    json: {\n      ...($json),\n      is_whitelisted: isMember === 1\n    }\n  }];\n} catch (error) {\n  await redis.quit();\n  throw new Error(`Redis error: ${error.message}`);\n}"
       },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [680, 300],
       "id": "c3d4e5f6-3456-7890-bcde-f01234567890",
       "name": "Check Whitelist"
@@ -51,11 +49,12 @@
           "conditions": [
             {
               "id": "condition1",
-              "leftValue": "={{ $json.response }}",
-              "rightValue": "1",
+              "leftValue": "={{ $json.is_whitelisted }}",
+              "rightValue": "true",
               "operator": {
-                "type": "number",
-                "operation": "equals"
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
               }
             }
           ],
@@ -70,7 +69,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id }}",
+        "chatId": "={{ $('Extract User Data').item.json.chat_id }}",
         "text": "⛔ Доступ запрещен. Вы не в белом списке.\n\nОбратитесь к администратору для получения доступа.",
         "additionalFields": {}
       },
@@ -82,12 +81,10 @@
     },
     {
       "parameters": {
-        "operation": "sIsMember",
-        "key": "ozon:acl:admins",
-        "member": "={{ $json.user_id }}"
+        "jsCode": "// Check admin using Redis\nconst Redis = require('ioredis');\n\nconst userId = $json.user_id;\n\nconst credentials = await this.getCredentials('redis');\n\nconst redis = new Redis({\n  host: credentials.host,\n  port: credentials.port,\n  password: credentials.password || undefined,\n  db: credentials.database || 0\n});\n\ntry {\n  const isAdmin = await redis.sismember('ozon:acl:admins', userId);\n  await redis.quit();\n  \n  return [{\n    json: {\n      ...($json),\n      is_admin: isAdmin === 1\n    }\n  }];\n} catch (error) {\n  await redis.quit();\n  throw new Error(`Redis error: ${error.message}`);\n}"
       },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [1120, 140],
       "id": "f6a7b8c9-6789-0123-ef01-234567890123",
       "name": "Check Admin"
@@ -182,7 +179,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId = $('Telegram Trigger').item.json.message?.chat?.id || $('Telegram Trigger').item.json.callback_query?.message?.chat?.id;\nconst isAdmin = $json.response === 1;\n\nconst keyboard = {\n  inline_keyboard: [\n    [{text: '📦 Заказы', callback_data: 'menu:orders'}],\n    [{text: '🎯 Кластеры', callback_data: 'menu:clusters'}]\n  ]\n};\n\nif (isAdmin) {\n  keyboard.inline_keyboard.push([{text: '⚙️ Админка', callback_data: 'menu:admin'}]);\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: '🤖 **Ozon Analytics Bot**\\n\\nВыберите раздел:',\n    reply_markup: keyboard\n  }\n}];"
+        "jsCode": "const chatId = $('Extract User Data').item.json.chat_id;\nconst isAdmin = $json.is_admin;\n\nconst keyboard = {\n  inline_keyboard: [\n    [{text: '📦 Заказы', callback_data: 'menu:orders'}],\n    [{text: '🎯 Кластеры', callback_data: 'menu:clusters'}]\n  ]\n};\n\nif (isAdmin) {\n  keyboard.inline_keyboard.push([{text: '⚙️ Админка', callback_data: 'menu:admin'}]);\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: '🤖 **Ozon Analytics Bot**\\n\\nВыберите раздел:',\n    reply_markup: keyboard\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -207,7 +204,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId = $('Telegram Trigger').item.json.message?.chat?.id;\nconst callbackData = $('Extract User Data').item.json.callback_data;\n\nconst action = callbackData.replace('menu:', '');\n\nlet text = '';\nlet keyboard = {inline_keyboard: [[{text: '« Назад', callback_data: '/start'}]]};\n\nif (action === 'orders') {\n  text = '📦 **Раздел: Заказы**\\n\\nОтправьте CSV файл с отчетом Ozon (FBO или FBS) для анализа.\\n\\n*Формат:* до 20MB, .csv';\n} else if (action === 'clusters') {\n  text = '🎯 **Раздел: Кластеры**\\n\\n🚧 В разработке.';\n} else if (action === 'admin') {\n  text = '⚙️ **Админка**\\n\\nУправление доступом:';\n  keyboard = {\n    inline_keyboard: [\n      [{text: '👥 Пользователи', callback_data: 'admin:users'}],\n      [{text: '« Назад', callback_data: '/start'}]\n    ]\n  };\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: text,\n    reply_markup: keyboard\n  }\n}];"
+        "jsCode": "const chatId = $('Extract User Data').item.json.chat_id;\nconst callbackData = $('Extract User Data').item.json.callback_data;\nconst isAdmin = $('Check Admin').item.json.is_admin;\n\nconst action = callbackData.replace('menu:', '');\n\nlet text = '';\nlet keyboard = {inline_keyboard: [[{text: '« Назад', callback_data: '/start'}]]};\n\nif (action === 'orders') {\n  text = '📦 **Раздел: Заказы**\\n\\nОтправьте CSV файл с отчетом Ozon (FBO или FBS) для анализа.\\n\\n*Формат:* до 20MB, .csv';\n} else if (action === 'clusters') {\n  text = '🎯 **Раздел: Кластеры**\\n\\n🚧 В разработке.';\n} else if (action === 'admin' && isAdmin) {\n  text = '⚙️ **Админка**\\n\\nУправление доступом:';\n  keyboard = {\n    inline_keyboard: [\n      [{text: '👥 Пользователи', callback_data: 'admin:users'}],\n      [{text: '« Назад', callback_data: '/start'}]\n    ]\n  };\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: text,\n    reply_markup: keyboard\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -232,7 +229,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId = $('Telegram Trigger').item.json.message?.chat?.id;\nconst document = $('Extract User Data').item.json.document;\n\nif (!document || document.mime_type !== 'text/csv') {\n  return [{\n    json: {\n      chat_id: chatId,\n      text: '❌ Пожалуйста, отправьте файл в формате CSV',\n      reply_markup: null\n    }\n  }];\n}\n\nif (document.file_size > 20 * 1024 * 1024) {\n  return [{\n    json: {\n      chat_id: chatId,\n      text: '❌ Файл слишком большой. Максимум: 20MB',\n      reply_markup: null\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: '⏳ Обрабатываю CSV файл...\\n\\nПожалуйста, подождите.',\n    reply_markup: null\n  }\n}];"
+        "jsCode": "const chatId = $('Extract User Data').item.json.chat_id;\nconst document = $('Extract User Data').item.json.document;\n\nif (!document || document.mime_type !== 'text/csv') {\n  return [{\n    json: {\n      chat_id: chatId,\n      text: '❌ Пожалуйста, отправьте файл в формате CSV',\n      reply_markup: null\n    }\n  }];\n}\n\nif (document.file_size > 20 * 1024 * 1024) {\n  return [{\n    json: {\n      chat_id: chatId,\n      text: '❌ Файл слишком большой. Максимум: 20MB',\n      reply_markup: null\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: '⏳ Обрабатываю CSV файл...\\n\\nПожалуйста, подождите.',\n    reply_markup: null\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
