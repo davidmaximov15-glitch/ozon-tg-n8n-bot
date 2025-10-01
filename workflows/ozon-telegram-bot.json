@@ -84,6 +84,7 @@
     },
     {
       "parameters": {
+        "operation": "xlsx",
         "options": {}
       },
       "type": "n8n-nodes-base.extractFromFile",
