@@ -273,7 +273,10 @@
           "parse_mode": "Markdown",
           "appendAttribution": false
         },
-        "replyMarkup": "inlineKeyboard"
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": "={{ $json.reply_markup.inline_keyboard.map(row => ({\n  row: {\n    buttons: row.map(btn => ({\n      text: btn.text,\n      additionalFields: {\n        callback_data: btn.callback_data\n      }\n    }))\n  }\n})) }}"
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -311,7 +314,10 @@
           "parse_mode": "Markdown",
           "appendAttribution": false
         },
-        "replyMarkup": "inlineKeyboard"
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": "={{ $json.reply_markup.inline_keyboard.map(row => ({\n  row: {\n    buttons: row.map(btn => ({\n      text: btn.text,\n      additionalFields: {\n        callback_data: btn.callback_data\n      }\n    }))\n  }\n})) }}"
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -403,7 +409,10 @@
           "parse_mode": "Markdown",
           "appendAttribution": false
         },
-        "replyMarkup": "inlineKeyboard"
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": "={{ $json.reply_markup.inline_keyboard.map(row => ({\n  row: {\n    buttons: row.map(btn => ({\n      text: btn.text,\n      additionalFields: {\n        callback_data: btn.callback_data\n      }\n    }))\n  }\n})) }}"
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
