@@ -42,7 +42,8 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:acl:whitelist:{{ $json.user_id }}"
+        "key": "=ozon:acl:whitelist:{{ $json.user_id }}",
+        "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -118,7 +119,8 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:acl:admins:{{ $('Extract User Data').item.json.user_id }}"
+        "key": "=ozon:acl:admins:{{ $('Extract User Data').item.json.user_id }}",
+        "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -495,7 +497,8 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $json.user_id }}:csv_data"
+        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
+        "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
