@@ -336,27 +336,6 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $json.chat_id }}",
-        "text": "={{ $json.text }}",
-        "additionalFields": {}
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        1780,
-        420
-      ],
-      "id": "a3b4c5d6-3456-7890-5678-901234567890",
-      "name": "Send CSV Response",
-      "credentials": {
-        "telegramApi": {
-          "id": "p4dTUZho7h1VsmzM",
-          "name": "Tg Ozon.Orders bot"
-        }
-      }
-    },
-    {
-      "parameters": {
         "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getFile?file_id={{ $('Extract User Data').item.json.document.file_id }}",
         "options": {}
       },
