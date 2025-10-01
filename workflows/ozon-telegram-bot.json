@@ -3,6 +3,19 @@
   "nodes": [
     {
       "parameters": {
+        "jsCode": "// 🔐 КОНФИГУРАЦИЯ БОТА\n// Измени TELEGRAM_BOT_TOKEN на свой токен от @BotFather\n\nconst TELEGRAM_BOT_TOKEN = \"YOUR_TELEGRAM_BOT_TOKEN_HERE\";\n\n// Инструкция:\n// 1. Открой Telegram и найди @BotFather\n// 2. Отправь /mybots -> выбери бота -> API Token\n// 3. Скопируй токен вида: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz\n// 4. Замени YOUR_TELEGRAM_BOT_TOKEN_HERE выше на свой токен\n// 5. Сохрани workflow\n\nreturn [{\n  json: {\n    telegram_bot_token: TELEGRAM_BOT_TOKEN\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        100
+      ],
+      "id": "config-node-001",
+      "name": "Config"
+    },
+    {
+      "parameters": {
         "updates": [
           "message",
           "callback_query"
@@ -533,7 +546,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -564,7 +577,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -595,7 +608,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -612,7 +625,7 @@
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getFile?file_id={{ $('Extract User Data').item.json.document.file_id }}",
+        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.telegram_bot_token }}/getFile?file_id={{ $('Extract User Data').item.json.document.file_id }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -626,7 +639,7 @@
     },
     {
       "parameters": {
-        "url": "=https://api.telegram.org/file/bot{{ $env.TELEGRAM_BOT_TOKEN }}/{{ $json.result.file_path }}",
+        "url": "=https://api.telegram.org/file/bot{{ $('Config').item.json.telegram_bot_token }}/{{ $json.result.file_path }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
