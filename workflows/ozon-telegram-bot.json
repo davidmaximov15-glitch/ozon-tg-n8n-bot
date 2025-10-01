@@ -275,7 +275,44 @@
         },
         "replyMarkup": "inlineKeyboard",
         "inlineKeyboard": {
-          "rows": "={{ $json.reply_markup.inline_keyboard.map(row => ({\n  row: {\n    buttons: row.map(btn => ({\n      text: btn.text,\n      additionalFields: {\n        callback_data: btn.callback_data\n      }\n    }))\n  }\n})) }}"
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[0][0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[0][0].callback_data }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[1][0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[1][0].callback_data }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].callback_data : '' }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -316,7 +353,32 @@
         },
         "replyMarkup": "inlineKeyboard",
         "inlineKeyboard": {
-          "rows": "={{ $json.reply_markup.inline_keyboard.map(row => ({\n  row: {\n    buttons: row.map(btn => ({\n      text: btn.text,\n      additionalFields: {\n        callback_data: btn.callback_data\n      }\n    }))\n  }\n})) }}"
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[0][0].text }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[0][0].callback_data }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].callback_data : '' }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -411,7 +473,68 @@
         },
         "replyMarkup": "inlineKeyboard",
         "inlineKeyboard": {
-          "rows": "={{ $json.reply_markup.inline_keyboard.map(row => ({\n  row: {\n    buttons: row.map(btn => ({\n      text: btn.text,\n      additionalFields: {\n        callback_data: btn.callback_data\n      }\n    }))\n  }\n})) }}"
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[0] ? $json.reply_markup.inline_keyboard[0][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[0] ? $json.reply_markup.inline_keyboard[0][0].callback_data : '' }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].callback_data : '' }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].callback_data : '' }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[3] ? $json.reply_markup.inline_keyboard[3][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[3] ? $json.reply_markup.inline_keyboard[3][0].callback_data : '' }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[4] ? $json.reply_markup.inline_keyboard[4][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[4] ? $json.reply_markup.inline_keyboard[4][0].callback_data : '' }}"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       },
       "type": "n8n-nodes-base.telegram",
