@@ -517,6 +517,85 @@
       ],
       "id": "merge-selection-data",
       "name": "Merge Selection with Data"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        900
+      ],
+      "id": "manual-admin-trigger",
+      "name": "🔧 Manual: Add Super User"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === НАСТРОЙКА СУПЕР-ЮЗЕРА ===\n// Измените USER_ID на нужный Telegram ID\n// Получить свой ID можно через @userinfobot\n\nconst USER_ID = \"YOUR_TELEGRAM_USER_ID_HERE\";  // ← ИЗМЕНИТЕ ЭТО\n\n// Валидация\nif (!USER_ID || USER_ID === \"YOUR_TELEGRAM_USER_ID_HERE\") {\n  throw new Error(\"❌ Не указан USER_ID! Откройте node и укажите свой Telegram User ID\");\n}\n\nif (!/^\\d+$/.test(USER_ID)) {\n  throw new Error(\"❌ USER_ID должен содержать только цифры\");\n}\n\nreturn [{\n  json: {\n    user_id: USER_ID,\n    message: `✅ Добавляю пользователя ${USER_ID} в whitelist и admins`\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        900
+      ],
+      "id": "admin-setup-code",
+      "name": "⚙️ Configure User ID"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=ozon:acl:whitelist:{{ $json.user_id }}",
+        "value": "1"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        680,
+        900
+      ],
+      "id": "admin-add-whitelist",
+      "name": "📝 Add to Whitelist",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=ozon:acl:admins:{{ $json.user_id }}",
+        "value": "1"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        900,
+        900
+      ],
+      "id": "admin-add-admins",
+      "name": "👑 Add to Admins",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const userId = $input.first().json.user_id;\n\nreturn [{\n  json: {\n    success: true,\n    user_id: userId,\n    message: `✅ Пользователь ${userId} успешно добавлен!`,\n    whitelist_key: `ozon:acl:whitelist:${userId}`,\n    admins_key: `ozon:acl:admins:${userId}`,\n    instructions: [\n      \"1. Проверьте в Redis:\",\n      `   redis-cli GET \"ozon:acl:whitelist:${userId}\"`,\n      `   redis-cli GET \"ozon:acl:admins:${userId}\"`,\n      \"2. Откройте бота в Telegram\",\n      \"3. Отправьте /start\",\n      \"4. Вы должны увидеть меню с кнопкой '⚙️ Админка'\"\n    ]\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        900
+      ],
+      "id": "admin-success-message",
+      "name": "✅ Success Message"
     }
   ],
   "connections": {
@@ -740,6 +819,50 @@
         [
           {
             "node": "Send Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔧 Manual: Add Super User": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Configure User ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Configure User ID": {
+      "main": [
+        [
+          {
+            "node": "📝 Add to Whitelist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Add to Whitelist": {
+      "main": [
+        [
+          {
+            "node": "👑 Add to Admins",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "👑 Add to Admins": {
+      "main": [
+        [
+          {
+            "node": "✅ Success Message",
             "type": "main",
             "index": 0
           }
