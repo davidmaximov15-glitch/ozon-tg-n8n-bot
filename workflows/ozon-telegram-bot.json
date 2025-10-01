@@ -58,7 +58,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\n\nconst token = $input.item.json.TELEGRAM_BOT_TOKEN;\nconst superusers = $input.item.json.SUPERUSER_IDS;\n\n// Проверка токена\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error('❌ TELEGRAM_BOT_TOKEN не настроен в Config node');\n}\n\n// Проверка superusers\nif (!superusers || superusers.trim() === '' || superusers === 'user_id_1,user_id_2') {\n  throw new Error('❌ SUPERUSER_IDS не настроены в Config node (замени user_id_1,user_id_2 на реальные ID)');\n}\n\n// Пропускаем данные дальше включая binary\nreturn {\n  json: $input.item.json,\n  binary: $input.item.binary\n};\n"
+        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\n\nconst token = $input.first().json.TELEGRAM_BOT_TOKEN;\nconst superusers = $input.first().json.SUPERUSER_IDS;\n\n// Проверка токена\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error('❌ TELEGRAM_BOT_TOKEN не настроен в Config node');\n}\n\n// Проверка superusers\nif (!superusers || superusers.trim() === '' || superusers === 'user_id_1,user_id_2') {\n  throw new Error('❌ SUPERUSER_IDS не настроены в Config node (замени user_id_1,user_id_2 на реальные ID)');\n}\n\n// Пропускаем данные дальше включая binary\nreturn {\n  json: $input.first().json,\n  binary: $input.first().binary\n};\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -71,7 +71,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract user data\nconst message = $input.item.json.message;\nconst callback = $input.item.json.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\n\nreturn {\n  json: {\n    user_id: String(userId),\n    chat_id: String(chatId),\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document,\n    // Пропускаем все остальные поля\n    ...($input.item.json || {})\n  },\n  binary: $input.item.binary  // ВАЖНО: пропускаем binary данные!\n};\n"
+        "jsCode": "// Extract user data\nconst message = $input.first().json.message;\nconst callback = $input.first().json.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\n\nreturn {\n  json: {\n    user_id: String(userId),\n    chat_id: String(chatId),\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document,\n    // Пропускаем все остальные поля\n    ...($input.first().json || {})\n  },\n  binary: $input.first().binary  // ВАЖНО: пропускаем binary данные!\n};\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -471,7 +471,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 🔐 ПРОВЕРКА ДОСТУПА\n\nconst userId = $input.item.json.user_id;\nconst configSuperusers = $('Config').first().json.SUPERUSER_IDS || '';\nconst whitelistValue = $input.item.json.value; // из Redis Check Whitelist\n\n// Парсим superusers из Config\nconst superuserIds = configSuperusers.split(',').map(id => id.trim()).filter(id => id);\n\n// Проверяем: superuser из Config ИЛИ admin из Redis whitelist\nconst isSuperuser = superuserIds.includes(userId);\nconst isAdmin = whitelistValue === '1';\n\nif (!isSuperuser && !isAdmin) {\n  throw new Error('⛔ Access denied. Only superusers and admins can use this bot.');\n}\n\n// Пользователь авторизован - пропускаем дальше\nreturn {\n  json: {\n    ...$input.item.json,\n    is_superuser: isSuperuser,\n    is_admin: isAdmin\n  }\n};\n"
+        "jsCode": "// 🔐 ПРОВЕРКА ДОСТУПА\n\nconst userId = $input.first().json.user_id;\nconst configSuperusers = $('Config').first().json.SUPERUSER_IDS || '';\nconst whitelistValue = $input.first().json.value; // из Redis Check Whitelist\n\n// Парсим superusers из Config\nconst superuserIds = configSuperusers.split(',').map(id => id.trim()).filter(id => id);\n\n// Проверяем: superuser из Config ИЛИ admin из Redis whitelist\nconst isSuperuser = superuserIds.includes(userId);\nconst isAdmin = whitelistValue === '1';\n\nif (!isSuperuser && !isAdmin) {\n  throw new Error('⛔ Access denied. Only superusers and admins can use this bot.');\n}\n\n// Пользователь авторизован - пропускаем дальше\nreturn {\n  json: {\n    ...$input.first().json,\n    is_superuser: isSuperuser,\n    is_admin: isAdmin\n  }\n};\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
