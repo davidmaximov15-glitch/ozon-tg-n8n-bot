@@ -370,9 +370,21 @@
               "row": {
                 "buttons": [
                   {
-                    "text": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].text : '' }}",
+                    "text": "={{ $json.reply_markup.inline_keyboard[1][0].text }}",
                     "additionalFields": {
-                      "callback_data": "={{ $json.reply_markup.inline_keyboard[1] ? $json.reply_markup.inline_keyboard[1][0].callback_data : '' }}"
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[1][0].callback_data }}"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].text : '' }}",
+                    "additionalFields": {
+                      "callback_data": "={{ $json.reply_markup.inline_keyboard[2] ? $json.reply_markup.inline_keyboard[2][0].callback_data : '' }}"
                     }
                   }
                 ]
