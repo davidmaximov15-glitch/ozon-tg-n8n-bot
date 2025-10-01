@@ -96,7 +96,9 @@
       "parameters": {
         "chatId": "={{ $('Extract User Data').item.json.chat_id }}",
         "text": "⛔ Доступ запрещен. Вы не в белом списке.\n\nОбратитесь к администратору для получения доступа.",
-        "additionalFields": {}
+        "additionalFields": {
+          "appendAttribution": false
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -267,7 +269,8 @@
         "text": "={{ $json.text }}",
         "additionalFields": {
           "parse_mode": "Markdown",
-          "reply_markup": "={{ JSON.stringify($json.reply_markup) }}"
+          "reply_markup": "={{ JSON.stringify($json.reply_markup) }}",
+          "appendAttribution": false
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -304,7 +307,8 @@
         "text": "={{ $json.text }}",
         "additionalFields": {
           "parse_mode": "Markdown",
-          "reply_markup": "={{ JSON.stringify($json.reply_markup) }}"
+          "reply_markup": "={{ JSON.stringify($json.reply_markup) }}",
+          "appendAttribution": false
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -395,7 +399,8 @@
         "text": "={{ $json.text }}",
         "additionalFields": {
           "parse_mode": "Markdown",
-          "reply_markup": "={{ JSON.stringify($json.reply_markup) }}"
+          "reply_markup": "={{ JSON.stringify($json.reply_markup) }}",
+          "appendAttribution": false
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -431,7 +436,8 @@
         "chatId": "={{ $json.chat_id }}",
         "text": "={{ $json.text }}",
         "additionalFields": {
-          "parse_mode": "Markdown"
+          "parse_mode": "Markdown",
+          "appendAttribution": false
         }
       },
       "type": "n8n-nodes-base.telegram",
