@@ -5,21 +5,17 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "telegram-webhook",
-        "responseMode": "responseNode",
-        "options": {}
+        "responseMode": "responseNode"
       },
-      "id": "webhook-trigger",
       "name": "Telegram Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1.1,
-      "position": [240, 300],
-      "webhookId": "telegram-webhook-ozon"
+      "typeVersion": 1,
+      "position": [240, 300]
     },
     {
       "parameters": {
         "jsCode": "// Extract user data from Telegram webhook\nconst body = $input.item.json.body;\n\n// Handle both message and callback_query\nconst message = body.message || body.callback_query?.message;\nconst from = body.message?.from || body.callback_query?.from;\n\nconst userId = from?.id;\nconst chatId = message?.chat?.id || body.callback_query?.message?.chat?.id;\nconst username = from?.username || from?.first_name || 'Unknown';\nconst messageText = body.message?.text || '';\nconst callbackData = body.callback_query?.data || '';\nconst document = body.message?.document || null;\n\nreturn [{\n  json: {\n    user_id: userId,\n    chat_id: chatId,\n    username: username,\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document,\n    callback_query_id: body.callback_query?.id,\n    raw_body: body\n  }\n}];"
       },
-      "id": "extract-user-data",
       "name": "Extract User Data",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -31,17 +27,10 @@
         "key": "ozon:acl:whitelist",
         "member": "={{ $json.user_id }}"
       },
-      "id": "check-whitelist",
       "name": "Check Whitelist",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [680, 300],
-      "credentials": {
-        "redis": {
-          "id": "redis-ozon",
-          "name": "Redis Ozon Bot"
-        }
-      }
+      "position": [680, 300]
     },
     {
       "parameters": {
@@ -54,7 +43,6 @@
           ]
         }
       },
-      "id": "is-authorized",
       "name": "Is Authorized?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
@@ -64,7 +52,6 @@
       "parameters": {
         "jsCode": "const chatId = $input.item.json.chat_id;\n\nreturn [{\n  json: {\n    method: 'sendMessage',\n    chat_id: chatId,\n    text: '⛔ Доступ запрещен. Вы не в белом списке.\\n\\nОбратитесь к администратору для получения доступа.',\n    parse_mode: 'Markdown'\n  }\n}];"
       },
-      "id": "unauthorized-response",
       "name": "Unauthorized Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -76,23 +63,15 @@
         "key": "ozon:acl:admins",
         "member": "={{ $json.user_id }}"
       },
-      "id": "check-admin",
       "name": "Check Admin",
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [1120, 140],
-      "credentials": {
-        "redis": {
-          "id": "redis-ozon",
-          "name": "Redis Ozon Bot"
-        }
-      }
+      "position": [1120, 140]
     },
     {
       "parameters": {
         "jsCode": "// Route based on message type\nconst messageText = $input.item.json.message_text;\nconst callbackData = $input.item.json.callback_data;\nconst document = $input.item.json.document;\nconst isAdmin = $input.item.json.is_admin || ($input.item.json.response === 1);\n\nlet route = 'unknown';\n\nif (messageText === '/start' || messageText === '/help') {\n  route = 'start';\n} else if (callbackData) {\n  if (callbackData.startsWith('menu:')) {\n    route = 'menu_action';\n  } else if (callbackData.startsWith('date:')) {\n    route = 'date_selection';\n  } else if (callbackData.startsWith('time:')) {\n    route = 'time_selection';\n  } else if (callbackData.startsWith('admin:')) {\n    route = 'admin_action';\n  } else if (callbackData === 'back_to_menu') {\n    route = 'start';\n  }\n} else if (document && document.mime_type === 'text/csv') {\n  route = 'csv_upload';\n} else if (messageText && messageText.length > 0) {\n  route = 'text_message';\n}\n\nreturn [{\n  json: {\n    ...($input.item.json),\n    route: route,\n    is_admin: isAdmin\n  }\n}];"
       },
-      "id": "route-message",
       "name": "Route Message",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -143,7 +122,6 @@
         },
         "fallbackOutput": 3
       },
-      "id": "switch-router",
       "name": "Switch Router",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 2,
@@ -153,7 +131,6 @@
       "parameters": {
         "jsCode": "// Generate main menu\nconst chatId = $input.item.json.chat_id;\nconst isAdmin = $input.item.json.is_admin;\n\nconst keyboard = {\n  inline_keyboard: [\n    [{text: '📦 Заказы', callback_data: 'menu:orders'}],\n    [{text: '🎯 Кластеры', callback_data: 'menu:clusters'}]\n  ]\n};\n\nif (isAdmin) {\n  keyboard.inline_keyboard.push([{text: '⚙️ Админка', callback_data: 'menu:admin'}]);\n}\n\nreturn [{\n  json: {\n    method: 'sendMessage',\n    chat_id: chatId,\n    text: '🤖 **Ozon Analytics Bot**\\n\\nВыберите раздел:',\n    parse_mode: 'Markdown',\n    reply_markup: JSON.stringify(keyboard)\n  }\n}];"
       },
-      "id": "generate-main-menu",
       "name": "Generate Main Menu",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -163,7 +140,6 @@
       "parameters": {
         "jsCode": "// Handle menu actions\nconst callbackData = $input.item.json.callback_data;\nconst chatId = $input.item.json.chat_id;\nconst isAdmin = $input.item.json.is_admin;\n\nconst action = callbackData.replace('menu:', '');\n\nlet text = '';\nlet keyboard = {inline_keyboard: [[{text: '« Назад в меню', callback_data: 'back_to_menu'}]]};\n\nif (action === 'orders') {\n  text = '📦 **Раздел: Заказы**\\n\\nОтправьте CSV файл с отчетом Ozon (FBO или FBS) для анализа.\\n\\n*Формат:* до 20MB, .csv файл';\n} else if (action === 'clusters') {\n  text = '🎯 **Раздел: Кластеры**\\n\\n🚧 Этот раздел находится в разработке.';\n} else if (action === 'admin' && isAdmin) {\n  text = '⚙️ **Админка**\\n\\nУправление доступом к боту:';\n  keyboard = {\n    inline_keyboard: [\n      [{text: '👥 Управление пользователями', callback_data: 'admin:users'}],\n      [{text: '👑 Управление админами', callback_data: 'admin:admins'}],\n      [{text: '« Назад в меню', callback_data: 'back_to_menu'}]\n    ]\n  };\n} else {\n  text = '❌ Неизвестное действие';\n}\n\nreturn [{\n  json: {\n    method: 'sendMessage',\n    chat_id: chatId,\n    text: text,\n    parse_mode: 'Markdown',\n    reply_markup: JSON.stringify(keyboard)\n  }\n}];"
       },
-      "id": "handle-menu-action",
       "name": "Handle Menu Action",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -173,7 +149,6 @@
       "parameters": {
         "jsCode": "// Validate and download CSV\nconst chatId = $input.item.json.chat_id;\nconst document = $input.item.json.document;\n\nif (!document || document.mime_type !== 'text/csv') {\n  return [{\n    json: {\n      method: 'sendMessage',\n      chat_id: chatId,\n      text: '❌ Пожалуйста, отправьте файл в формате CSV'\n    }\n  }];\n}\n\nif (document.file_size > 20 * 1024 * 1024) {\n  return [{\n    json: {\n      method: 'sendMessage',\n      chat_id: chatId,\n      text: '❌ Файл слишком большой. Максимальный размер: 20MB'\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    method: 'sendMessage',\n    chat_id: chatId,\n    text: '⏳ Обрабатываю CSV файл...\\n\\nПожалуйста, подождите.',\n    file_id: document.file_id,\n    file_name: document.file_name\n  }\n}];"
       },
-      "id": "handle-csv-upload",
       "name": "Handle CSV Upload",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -181,28 +156,23 @@
     },
     {
       "parameters": {
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
         "method": "POST",
         "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/{{ $json.method }}",
         "sendBody": true,
-        "specifyBody": "json",
+        "contentType": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
         "options": {}
       },
-      "id": "send-to-telegram",
       "name": "Send to Telegram",
       "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.1,
+      "typeVersion": 3,
       "position": [2000, 300]
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ {\"ok\": true} }}",
-        "options": {}
+        "responseBody": "={{ {\"ok\": true} }}"
       },
-      "id": "respond-to-webhook",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
@@ -211,173 +181,50 @@
   ],
   "connections": {
     "Telegram Webhook": {
-      "main": [
-        [
-          {
-            "node": "Extract User Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Extract User Data", "type": "main", "index": 0}]]
     },
     "Extract User Data": {
-      "main": [
-        [
-          {
-            "node": "Check Whitelist",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Check Whitelist", "type": "main", "index": 0}]]
     },
     "Check Whitelist": {
-      "main": [
-        [
-          {
-            "node": "Is Authorized?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Is Authorized?", "type": "main", "index": 0}]]
     },
     "Is Authorized?": {
       "main": [
-        [
-          {
-            "node": "Check Admin",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Unauthorized Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{"node": "Check Admin", "type": "main", "index": 0}],
+        [{"node": "Unauthorized Response", "type": "main", "index": 0}]
       ]
     },
     "Check Admin": {
-      "main": [
-        [
-          {
-            "node": "Route Message",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Route Message", "type": "main", "index": 0}]]
     },
     "Route Message": {
-      "main": [
-        [
-          {
-            "node": "Switch Router",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Switch Router", "type": "main", "index": 0}]]
     },
     "Switch Router": {
       "main": [
-        [
-          {
-            "node": "Generate Main Menu",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Handle CSV Upload",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Handle Menu Action",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Generate Main Menu",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{"node": "Generate Main Menu", "type": "main", "index": 0}],
+        [{"node": "Handle CSV Upload", "type": "main", "index": 0}],
+        [{"node": "Handle Menu Action", "type": "main", "index": 0}],
+        [{"node": "Generate Main Menu", "type": "main", "index": 0}]
       ]
     },
     "Generate Main Menu": {
-      "main": [
-        [
-          {
-            "node": "Send to Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Send to Telegram", "type": "main", "index": 0}]]
     },
     "Handle Menu Action": {
-      "main": [
-        [
-          {
-            "node": "Send to Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Send to Telegram", "type": "main", "index": 0}]]
     },
     "Handle CSV Upload": {
-      "main": [
-        [
-          {
-            "node": "Send to Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Send to Telegram", "type": "main", "index": 0}]]
     },
     "Unauthorized Response": {
-      "main": [
-        [
-          {
-            "node": "Send to Telegram",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Send to Telegram", "type": "main", "index": 0}]]
     },
     "Send to Telegram": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+      "main": [[{"node": "Respond to Webhook", "type": "main", "index": 0}]]
     }
   },
-  "pinData": {},
-  "settings": {
-    "executionOrder": "v1"
-  },
-  "staticData": null,
-  "tags": ["ozon", "telegram", "analytics"],
-  "triggerCount": 0,
-  "updatedAt": "2025-10-01T00:00:00.000Z",
-  "versionId": "1"
+  "settings": {},
+  "staticData": null
 }
