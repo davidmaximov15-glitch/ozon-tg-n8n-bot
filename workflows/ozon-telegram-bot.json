@@ -127,8 +127,8 @@
           },
           "conditions": [
             {
-              "id": "condition1",
-              "leftValue": "={{ $json.is_whitelisted }}",
+              "id": "is-superuser-or-admin",
+              "leftValue": "={{ $json.is_superuser === true || $json.is_admin === true }}",
               "rightValue": "true",
               "operator": {
                 "type": "boolean",
