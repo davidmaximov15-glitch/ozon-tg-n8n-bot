@@ -71,11 +71,12 @@
           "conditions": [
             {
               "id": "condition1",
-              "leftValue": "={{ $json.value }}",
-              "rightValue": "1",
+              "leftValue": "={{ $json.is_whitelisted }}",
+              "rightValue": "true",
               "operator": {
-                "type": "string",
-                "operation": "equals"
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
               }
             }
           ],
@@ -596,6 +597,19 @@
       ],
       "id": "admin-success-message",
       "name": "✅ Success Message"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Проверка whitelist из Redis\nconst redisValue = $json.value;\n\n// Redis GET возвращает null если ключа нет\n// Проверяем что значение существует и равно \"1\"\nconst isWhitelisted = redisValue !== null && \n                       redisValue !== undefined && \n                       String(redisValue) === \"1\";\n\nreturn [{\n  json: {\n    user_id: $('Extract User Data').item.json.user_id,\n    chat_id: $('Extract User Data').item.json.chat_id,\n    message_text: $('Extract User Data').item.json.message_text,\n    callback_data: $('Extract User Data').item.json.callback_data,\n    document: $('Extract User Data').item.json.document,\n    is_whitelisted: isWhitelisted,\n    redis_value: redisValue\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        790,
+        300
+      ],
+      "id": "validate-whitelist-code",
+      "name": "Validate Whitelist"
     }
   ],
   "connections": {
@@ -625,7 +639,7 @@
       "main": [
         [
           {
-            "node": "Is Authorized?",
+            "node": "Validate Whitelist",
             "type": "main",
             "index": 0
           }
@@ -863,6 +877,17 @@
         [
           {
             "node": "✅ Success Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Whitelist": {
+      "main": [
+        [
+          {
+            "node": "Is Authorized?",
             "type": "main",
             "index": 0
           }
