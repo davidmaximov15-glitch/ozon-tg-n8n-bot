@@ -29,10 +29,11 @@
     },
     {
       "parameters": {
-        "jsCode": "// Check whitelist using Redis with credentials\nconst Redis = require('ioredis');\n\nconst userId = $json.user_id;\n\n// Get Redis credentials from n8n\nconst credentials = await this.getCredentials('redis');\n\nconst redis = new Redis({\n  host: credentials.host,\n  port: credentials.port,\n  password: credentials.password || undefined,\n  db: credentials.database || 0\n});\n\ntry {\n  const isMember = await redis.sismember('ozon:acl:whitelist', userId);\n  await redis.quit();\n  \n  return [{\n    json: {\n      ...($json),\n      is_whitelisted: isMember === 1\n    }\n  }];\n} catch (error) {\n  await redis.quit();\n  throw new Error(`Redis error: ${error.message}`);\n}"
+        "operation": "get",
+        "key": "=ozon:acl:whitelist:{{ $json.user_id }}"
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
       "position": [680, 300],
       "id": "c3d4e5f6-3456-7890-bcde-f01234567890",
       "name": "Check Whitelist"
@@ -49,12 +50,11 @@
           "conditions": [
             {
               "id": "condition1",
-              "leftValue": "={{ $json.is_whitelisted }}",
-              "rightValue": "true",
+              "leftValue": "={{ $json.value }}",
+              "rightValue": "1",
               "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
+                "type": "string",
+                "operation": "equals"
               }
             }
           ],
@@ -81,10 +81,11 @@
     },
     {
       "parameters": {
-        "jsCode": "// Check admin using Redis\nconst Redis = require('ioredis');\n\nconst userId = $json.user_id;\n\nconst credentials = await this.getCredentials('redis');\n\nconst redis = new Redis({\n  host: credentials.host,\n  port: credentials.port,\n  password: credentials.password || undefined,\n  db: credentials.database || 0\n});\n\ntry {\n  const isAdmin = await redis.sismember('ozon:acl:admins', userId);\n  await redis.quit();\n  \n  return [{\n    json: {\n      ...($json),\n      is_admin: isAdmin === 1\n    }\n  }];\n} catch (error) {\n  await redis.quit();\n  throw new Error(`Redis error: ${error.message}`);\n}"
+        "operation": "get",
+        "key": "=ozon:acl:admins:{{ $('Extract User Data').item.json.user_id }}"
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
       "position": [1120, 140],
       "id": "f6a7b8c9-6789-0123-ef01-234567890123",
       "name": "Check Admin"
@@ -104,7 +105,7 @@
                 "conditions": [
                   {
                     "id": "cond-start",
-                    "leftValue": "={{ $json.message_text }}",
+                    "leftValue": "={{ $('Extract User Data').item.json.message_text }}",
                     "rightValue": "/start",
                     "operator": {
                       "type": "string",
@@ -128,7 +129,7 @@
                 "conditions": [
                   {
                     "id": "cond-csv",
-                    "leftValue": "={{ $json.document?.mime_type }}",
+                    "leftValue": "={{ $('Extract User Data').item.json.document?.mime_type }}",
                     "rightValue": "text/csv",
                     "operator": {
                       "type": "string",
@@ -152,7 +153,7 @@
                 "conditions": [
                   {
                     "id": "cond-menu",
-                    "leftValue": "={{ $json.callback_data }}",
+                    "leftValue": "={{ $('Extract User Data').item.json.callback_data }}",
                     "rightValue": "menu:",
                     "operator": {
                       "type": "string",
@@ -179,7 +180,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId = $('Extract User Data').item.json.chat_id;\nconst isAdmin = $json.is_admin;\n\nconst keyboard = {\n  inline_keyboard: [\n    [{text: '📦 Заказы', callback_data: 'menu:orders'}],\n    [{text: '🎯 Кластеры', callback_data: 'menu:clusters'}]\n  ]\n};\n\nif (isAdmin) {\n  keyboard.inline_keyboard.push([{text: '⚙️ Админка', callback_data: 'menu:admin'}]);\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: '🤖 **Ozon Analytics Bot**\\n\\nВыберите раздел:',\n    reply_markup: keyboard\n  }\n}];"
+        "jsCode": "const chatId = $('Extract User Data').item.json.chat_id;\nconst isAdmin = $('Check Admin').item.json.value === '1';\n\nconst keyboard = {\n  inline_keyboard: [\n    [{text: '📦 Заказы', callback_data: 'menu:orders'}],\n    [{text: '🎯 Кластеры', callback_data: 'menu:clusters'}]\n  ]\n};\n\nif (isAdmin) {\n  keyboard.inline_keyboard.push([{text: '⚙️ Админка', callback_data: 'menu:admin'}]);\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: '🤖 **Ozon Analytics Bot**\\n\\nВыберите раздел:',\n    reply_markup: keyboard\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -204,7 +205,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId = $('Extract User Data').item.json.chat_id;\nconst callbackData = $('Extract User Data').item.json.callback_data;\nconst isAdmin = $('Check Admin').item.json.is_admin;\n\nconst action = callbackData.replace('menu:', '');\n\nlet text = '';\nlet keyboard = {inline_keyboard: [[{text: '« Назад', callback_data: '/start'}]]};\n\nif (action === 'orders') {\n  text = '📦 **Раздел: Заказы**\\n\\nОтправьте CSV файл с отчетом Ozon (FBO или FBS) для анализа.\\n\\n*Формат:* до 20MB, .csv';\n} else if (action === 'clusters') {\n  text = '🎯 **Раздел: Кластеры**\\n\\n🚧 В разработке.';\n} else if (action === 'admin' && isAdmin) {\n  text = '⚙️ **Админка**\\n\\nУправление доступом:';\n  keyboard = {\n    inline_keyboard: [\n      [{text: '👥 Пользователи', callback_data: 'admin:users'}],\n      [{text: '« Назад', callback_data: '/start'}]\n    ]\n  };\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: text,\n    reply_markup: keyboard\n  }\n}];"
+        "jsCode": "const chatId = $('Extract User Data').item.json.chat_id;\nconst callbackData = $('Extract User Data').item.json.callback_data;\nconst isAdmin = $('Check Admin').item.json.value === '1';\n\nconst action = callbackData.replace('menu:', '');\n\nlet text = '';\nlet keyboard = {inline_keyboard: [[{text: '« Назад', callback_data: '/start'}]]};\n\nif (action === 'orders') {\n  text = '📦 **Раздел: Заказы**\\n\\nОтправьте CSV файл с отчетом Ozon (FBO или FBS) для анализа.\\n\\n*Формат:* до 20MB, .csv';\n} else if (action === 'clusters') {\n  text = '🎯 **Раздел: Кластеры**\\n\\n🚧 В разработке.';\n} else if (action === 'admin' && isAdmin) {\n  text = '⚙️ **Админка**\\n\\nУправление доступом:';\n  keyboard = {\n    inline_keyboard: [\n      [{text: '👥 Пользователи', callback_data: 'admin:users'}],\n      [{text: '« Назад', callback_data: '/start'}]\n    ]\n  };\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: text,\n    reply_markup: keyboard\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
