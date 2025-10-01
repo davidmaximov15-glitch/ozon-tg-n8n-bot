@@ -13,7 +13,10 @@
       },
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
-      "position": [240, 300],
+      "position": [
+        240,
+        300
+      ],
       "id": "a1b2c3d4-1234-5678-9abc-def012345678",
       "name": "Telegram Trigger"
     },
@@ -23,7 +26,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300],
+      "position": [
+        460,
+        300
+      ],
       "id": "b2c3d4e5-2345-6789-abcd-ef0123456789",
       "name": "Extract User Data"
     },
@@ -34,7 +40,10 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [680, 300],
+      "position": [
+        680,
+        300
+      ],
       "id": "c3d4e5f6-3456-7890-bcde-f01234567890",
       "name": "Check Whitelist"
     },
@@ -63,7 +72,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [900, 300],
+      "position": [
+        900,
+        300
+      ],
       "id": "d4e5f6a7-4567-8901-cdef-012345678901",
       "name": "Is Authorized?"
     },
@@ -75,7 +87,10 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1120, 460],
+      "position": [
+        1120,
+        460
+      ],
       "id": "e5f6a7b8-5678-9012-def0-123456789012",
       "name": "Unauthorized Response"
     },
@@ -86,7 +101,10 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [1120, 140],
+      "position": [
+        1120,
+        140
+      ],
       "id": "f6a7b8c9-6789-0123-ef01-234567890123",
       "name": "Check Admin"
     },
@@ -165,6 +183,30 @@
               },
               "renameOutput": true,
               "outputKey": "Menu"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-date",
+                    "leftValue": "={{ $('Extract User Data').item.json.callback_data }}",
+                    "rightValue": "date:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "DateSelection"
             }
           ]
         },
@@ -174,7 +216,10 @@
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [1340, 140],
+      "position": [
+        1340,
+        140
+      ],
       "id": "a7b8c9d0-7890-1234-f012-345678901234",
       "name": "Route Message"
     },
@@ -184,7 +229,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1560, 60],
+      "position": [
+        1560,
+        60
+      ],
       "id": "b8c9d0e1-8901-2345-0123-456789012345",
       "name": "Generate Main Menu"
     },
@@ -199,7 +247,10 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1780, 60],
+      "position": [
+        1780,
+        60
+      ],
       "id": "c9d0e1f2-9012-3456-1234-567890123456",
       "name": "Send Menu"
     },
@@ -209,7 +260,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1560, 240],
+      "position": [
+        1560,
+        240
+      ],
       "id": "d0e1f2a3-0123-4567-2345-678901234567",
       "name": "Handle Menu"
     },
@@ -224,7 +278,10 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1780, 240],
+      "position": [
+        1780,
+        240
+      ],
       "id": "e1f2a3b4-1234-5678-3456-789012345678",
       "name": "Send Menu Response"
     },
@@ -234,7 +291,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1560, 420],
+      "position": [
+        1560,
+        420
+      ],
       "id": "f2a3b4c5-2345-6789-4567-890123456789",
       "name": "Handle CSV"
     },
@@ -246,45 +306,400 @@
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1780, 420],
+      "position": [
+        1780,
+        420
+      ],
       "id": "a3b4c5d6-3456-7890-5678-901234567890",
       "name": "Send CSV Response"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/getFile?file_id={{ $('Extract User Data').item.json.document.file_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1780,
+        420
+      ],
+      "id": "download-csv-1",
+      "name": "Get File Path"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.telegram.org/file/bot{{ $env.TELEGRAM_BOT_TOKEN }}/{{ $json.result.file_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        2000,
+        420
+      ],
+      "id": "download-csv-2",
+      "name": "Download CSV"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse CSV line handling quotes\nfunction parseCSVLine(line) {\n  const values = [];\n  let current = '';\n  let inQuotes = false;\n  \n  for (let i = 0; i < line.length; i++) {\n    const char = line[i];\n    \n    if (char === '\"') {\n      if (inQuotes && line[i + 1] === '\"') {\n        current += '\"';\n        i++;\n      } else {\n        inQuotes = !inQuotes;\n      }\n    } else if (char === ',' && !inQuotes) {\n      values.push(current.trim());\n      current = '';\n    } else {\n      current += char;\n    }\n  }\n  \n  values.push(current.trim());\n  return values;\n}\n\nfunction detectReportType(headers) {\n  const headersLower = headers.map(h => h.toLowerCase());\n  if (headersLower.some(h => h.includes('номер заказа'))) return 'FBO';\n  if (headersLower.some(h => h.includes('№ заказа'))) return 'FBS';\n  return 'UNKNOWN';\n}\n\nfunction findValue(record, possibleKeys, fallback = '') {\n  for (const key of possibleKeys) {\n    if (record[key] !== undefined && record[key] !== '') {\n      return record[key];\n    }\n  }\n  return fallback;\n}\n\nfunction normalizeRecord(headers, values, reportType) {\n  const record = {};\n  headers.forEach((header, idx) => {\n    record[header] = values[idx] || '';\n  });\n\n  let orderId, sku, quantity, price, createdAt, status;\n\n  if (reportType === 'FBO') {\n    orderId = findValue(record, ['Номер заказа'], values[0]);\n    sku = findValue(record, ['Артикул'], values[6]);\n    quantity = parseInt(findValue(record, ['Количество'], values[8]) || '1');\n    price = parseFloat(findValue(record, ['Цена'], values[13]) || '0');\n    createdAt = findValue(record, ['Дата создания'], values[15]);\n    status = findValue(record, ['Статус'], values[16]);\n  } else {\n    orderId = findValue(record, ['№ заказа'], values[0]);\n    sku = findValue(record, ['Артикул продавца', 'Артикул'], values[1]);\n    quantity = parseInt(findValue(record, ['Кол-во'], values[2]) || '1');\n    price = parseFloat(findValue(record, ['Цена'], values[3]) || '0');\n    createdAt = findValue(record, ['Дата создания'], values[4]);\n    status = findValue(record, ['Статус'], values[5]);\n  }\n\n  if (!orderId || !sku) return null;\n\n  return {\n    order_id: orderId,\n    sku: sku,\n    quantity: isNaN(quantity) ? 1 : quantity,\n    price: isNaN(price) ? 0 : price,\n    created_at: createdAt,\n    status: status ? status.toLowerCase() : ''\n  };\n}\n\n// Main parsing\nconst csvData = $input.item.json.data;\nconst lines = csvData.trim().split('\\n');\n\nif (lines.length < 2) {\n  throw new Error('CSV файл пустой');\n}\n\nconst headers = parseCSVLine(lines[0]);\nconst reportType = detectReportType(headers);\n\nif (reportType === 'UNKNOWN') {\n  throw new Error('Не удалось определить тип отчета');\n}\n\nconst records = [];\nfor (let i = 1; i < lines.length; i++) {\n  const line = lines[i].trim();\n  if (!line) continue;\n  \n  try {\n    const values = parseCSVLine(line);\n    const record = normalizeRecord(headers, values, reportType);\n    if (record) records.push(record);\n  } catch (e) {}\n}\n\nconst dates = new Set();\nrecords.forEach(record => {\n  if (record.created_at) {\n    try {\n      const date = new Date(record.created_at);\n      const mskDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);\n      const dateStr = mskDate.toISOString().split('T')[0];\n      dates.add(dateStr);\n    } catch (e) {}\n  }\n});\n\nconst availableDates = Array.from(dates).sort();\n\nreturn [{\n  json: {\n    reportType,\n    records,\n    availableDates,\n    totalRecords: records.length,\n    chat_id: $('Extract User Data').item.json.chat_id,\n    user_id: $('Extract User Data').item.json.user_id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2220,
+        420
+      ],
+      "id": "parse-csv-node",
+      "name": "Parse CSV"
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsedData = $input.item.json;\nconst availableDates = parsedData.availableDates;\n\nif (availableDates.length === 0) {\n  return [{\n    json: {\n      chat_id: parsedData.chat_id,\n      text: '❌ В файле не найдены даты',\n      reply_markup: null\n    }\n  }];\n}\n\nconst keyboard = {\n  inline_keyboard: availableDates.slice(0, 10).map(date => [{\n    text: date,\n    callback_data: `date:${date}`\n  }])\n};\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: `📅 Выберите дату для анализа:\\n\\nТип отчета: ${parsedData.reportType}\\nВсего записей: ${parsedData.totalRecords}`,\n    reply_markup: keyboard\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        420
+      ],
+      "id": "date-keyboard-node",
+      "name": "Generate Date Keyboard"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "reply_markup": "={{ JSON.stringify($json.reply_markup) }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2660,
+        420
+      ],
+      "id": "send-date-selection",
+      "name": "Send Date Selection"
+    },
+    {
+      "parameters": {
+        "jsCode": "function filterRecordsByDateTime(records, date, startTime, endTime) {\n  return records.filter(record => {\n    try {\n      const recordDate = new Date(record.created_at);\n      const mskDate = new Date(recordDate.getTime() + 3 * 60 * 60 * 1000);\n      const recordDateStr = mskDate.toISOString().split('T')[0];\n      const recordTimeStr = mskDate.toTimeString().split(' ')[0].substring(0, 5);\n      \n      return recordDateStr === date && recordTimeStr >= startTime && recordTimeStr <= endTime;\n    } catch (e) {\n      return false;\n    }\n  });\n}\n\nfunction calculateStatistics(records, date, startTime, endTime) {\n  const filteredRecords = filterRecordsByDateTime(records, date, startTime, endTime);\n  \n  if (filteredRecords.length === 0) {\n    return {\n      date, startTime, endTime,\n      totalOrders: 0,\n      totalCancellations: 0,\n      totalRevenue: 0,\n      skuStats: {},\n      message: 'Нет данных за указанный период'\n    };\n  }\n\n  const statsBySku = {};\n  const revenueStatuses = ['доставлен', 'доставляется', 'ожидает сборки', 'ожидает отгрузки'];\n  const cancelStatuses = ['отменён', 'отменен', 'возврат'];\n\n  filteredRecords.forEach(record => {\n    const sku = record.sku;\n    const status = record.status.toLowerCase();\n    const quantity = record.quantity || 1;\n    const price = record.price || 0;\n    \n    if (!statsBySku[sku]) {\n      statsBySku[sku] = {\n        totalOrders: 0,\n        cancellations: 0,\n        totalRevenue: 0,\n        weightedPriceSum: 0,\n        weightedQuantitySum: 0,\n        avgPrice: 0\n      };\n    }\n    \n    statsBySku[sku].totalOrders += quantity;\n    \n    if (cancelStatuses.some(s => status.includes(s))) {\n      statsBySku[sku].cancellations += quantity;\n    }\n    \n    if (revenueStatuses.some(s => status.includes(s))) {\n      statsBySku[sku].totalRevenue += price * quantity;\n      statsBySku[sku].weightedPriceSum += price * quantity;\n      statsBySku[sku].weightedQuantitySum += quantity;\n    }\n  });\n\n  Object.keys(statsBySku).forEach(sku => {\n    const stats = statsBySku[sku];\n    if (stats.weightedQuantitySum > 0) {\n      stats.avgPrice = stats.weightedPriceSum / stats.weightedQuantitySum;\n    }\n  });\n\n  let totalOrders = 0, totalCancellations = 0, totalRevenue = 0;\n  Object.values(statsBySku).forEach(stats => {\n    totalOrders += stats.totalOrders;\n    totalCancellations += stats.cancellations;\n    totalRevenue += stats.totalRevenue;\n  });\n\n  return { date, startTime, endTime, totalOrders, totalCancellations, totalRevenue, skuStats: statsBySku };\n}\n\nfunction formatStatisticsMessage(stats) {\n  let message = `📊 **Статистика заказов**\\n\\n`;\n  message += `📅 Дата: ${stats.date}\\n`;\n  message += `⏰ Время: ${stats.startTime} - ${stats.endTime}\\n\\n`;\n\n  if (stats.totalOrders === 0) {\n    message += stats.message || 'Нет данных';\n    return message;\n  }\n\n  const sortedSkus = Object.keys(stats.skuStats).sort();\n  sortedSkus.forEach(sku => {\n    const skuStats = stats.skuStats[sku];\n    message += `**${sku}**\\n`;\n    message += `  • Заказов: ${skuStats.totalOrders}\\n`;\n    message += `  • Отмен: ${skuStats.cancellations}\\n`;\n    message += `  • Средняя цена: ${skuStats.avgPrice.toFixed(2)} ₽\\n`;\n    message += `  • Сумма: ${skuStats.totalRevenue.toFixed(2)} ₽\\n\\n`;\n  });\n\n  message += `**ИТОГО:**\\n`;\n  message += `  • Всего заказов: ${stats.totalOrders}\\n`;\n  message += `  • Всего отмен: ${stats.totalCancellations}\\n`;\n  message += `  • Общая сумма: ${stats.totalRevenue.toFixed(2)} ₽\\n`;\n\n  return message;\n}\n\n// Main execution\nconst parsedData = $input.item.json;\nconst date = $json.selectedDate || parsedData.availableDates[0];\nconst startTime = $json.startTime || '00:00';\nconst endTime = $json.endTime || '23:59';\n\nconst stats = calculateStatistics(parsedData.records, date, startTime, endTime);\nconst message = formatStatisticsMessage(stats);\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: message,\n    stats: stats,\n    parsed_data: parsedData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        600
+      ],
+      "id": "calc-stats-node",
+      "name": "Calculate Statistics"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2660,
+        600
+      ],
+      "id": "send-statistics",
+      "name": "Send Statistics"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
+        "value": "={{ JSON.stringify($json) }}",
+        "options": {
+          "ttl": 3600
+        }
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2220,
+        540
+      ],
+      "id": "cache-to-redis",
+      "name": "Cache to Redis"
+    },
+    {
+      "parameters": {
+        "jsCode": "const callbackData = $('Extract User Data').item.json.callback_data;\nconst selectedDate = callbackData.replace('date:', '');\nconst userId = $('Extract User Data').item.json.user_id;\n\n// Load cached data from Redis would go here\n// For now, return selection info\nreturn [{\n  json: {\n    selectedDate: selectedDate,\n    user_id: userId,\n    chat_id: $('Extract User Data').item.json.chat_id,\n    startTime: '00:00',\n    endTime: '23:59'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        600
+      ],
+      "id": "handle-date-callback",
+      "name": "Handle Date Callback"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:cache:{{ $json.user_id }}:csv_data"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        600
+      ],
+      "id": "get-cached-data",
+      "name": "Get Cached Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const dateSelection = $input.first().json;\nconst cachedData = JSON.parse($input.last().json.value || '{}');\n\nreturn [{\n  json: {\n    ...cachedData,\n    selectedDate: dateSelection.selectedDate,\n    startTime: dateSelection.startTime,\n    endTime: dateSelection.endTime,\n    chat_id: dateSelection.chat_id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        600
+      ],
+      "id": "merge-selection-data",
+      "name": "Merge Selection with Data"
     }
   ],
   "connections": {
     "Telegram Trigger": {
-      "main": [[{"node": "Extract User Data", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Extract User Data": {
-      "main": [[{"node": "Check Whitelist", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Check Whitelist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Check Whitelist": {
-      "main": [[{"node": "Is Authorized?", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Is Authorized?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Is Authorized?": {
       "main": [
-        [{"node": "Check Admin", "type": "main", "index": 0}],
-        [{"node": "Unauthorized Response", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Check Admin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unauthorized Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Check Admin": {
-      "main": [[{"node": "Route Message", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Route Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Route Message": {
       "main": [
-        [{"node": "Generate Main Menu", "type": "main", "index": 0}],
-        [{"node": "Handle CSV", "type": "main", "index": 0}],
-        [{"node": "Handle Menu", "type": "main", "index": 0}]
+        [
+          {
+            "node": "Generate Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle CSV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Date Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Generate Main Menu": {
-      "main": [[{"node": "Send Menu", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Send Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Handle Menu": {
-      "main": [[{"node": "Send Menu Response", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Send Menu Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Handle CSV": {
-      "main": [[{"node": "Send CSV Response", "type": "main", "index": 0}]]
+      "main": [
+        [
+          {
+            "node": "Get File Path",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File Path": {
+      "main": [
+        [
+          {
+            "node": "Download CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download CSV": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV": {
+      "main": [
+        [
+          {
+            "node": "Cache to Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Date Keyboard": {
+      "main": [
+        [
+          {
+            "node": "Send Date Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache to Redis": {
+      "main": [
+        [
+          {
+            "node": "Generate Date Keyboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Date Callback": {
+      "main": [
+        [
+          {
+            "node": "Get Cached Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cached Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Selection with Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Selection with Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Statistics": {
+      "main": [
+        [
+          {
+            "node": "Send Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
