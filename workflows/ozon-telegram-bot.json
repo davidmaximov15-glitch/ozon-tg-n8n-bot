@@ -271,9 +271,9 @@
         "text": "={{ $json.text }}",
         "additionalFields": {
           "parse_mode": "Markdown",
-          "reply_markup": "={{ $json.reply_markup }}",
           "appendAttribution": false
-        }
+        },
+        "replyMarkup": "inlineKeyboard"
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -309,9 +309,9 @@
         "text": "={{ $json.text }}",
         "additionalFields": {
           "parse_mode": "Markdown",
-          "reply_markup": "={{ $json.reply_markup }}",
           "appendAttribution": false
-        }
+        },
+        "replyMarkup": "inlineKeyboard"
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -401,9 +401,9 @@
         "text": "={{ $json.text }}",
         "additionalFields": {
           "parse_mode": "Markdown",
-          "reply_markup": "={{ $json.reply_markup }}",
           "appendAttribution": false
-        }
+        },
+        "replyMarkup": "inlineKeyboard"
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
