@@ -305,7 +305,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
+        2300,
         40
       ],
       "id": "n-prep-menu",
@@ -322,7 +322,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2440,
+        2520,
         40
       ],
       "id": "n-sendmenu",
@@ -365,7 +365,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2460,
+        2740,
         160
       ],
       "id": "n-prep-menuresp",
@@ -382,7 +382,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2680,
+        2960,
         160
       ],
       "id": "n-send-menuresp",
@@ -412,7 +412,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2240,
+        2280,
         240
       ],
       "id": "n-getfile-csv",
@@ -435,7 +435,7 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        2440,
+        2500,
         240
       ],
       "id": "n-extract-csv",
@@ -448,7 +448,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2660,
+        2720,
         240
       ],
       "id": "n-parse",
@@ -466,7 +466,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2860,
+        2940,
         240
       ],
       "id": "n-cachecsv",
@@ -485,7 +485,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3060,
+        3160,
         240
       ],
       "id": "n-calc-month",
@@ -500,7 +500,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        3380,
+        3500,
         240
       ],
       "id": "n-fetch-csv",
@@ -521,8 +521,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        3380,
-        320
+        3720,
+        240
       ],
       "id": "n-get-selected",
       "name": "Get Selected Dates",
@@ -574,7 +574,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2260,
+        2300,
         520
       ],
       "id": "n-toggle",
@@ -592,7 +592,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2460,
+        2520,
         520
       ],
       "id": "n-persist-sel",
@@ -630,7 +630,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2660,
+        2740,
         520
       ],
       "id": "n-fetch-csv-forgrid",
@@ -667,7 +667,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2260,
+        2300,
         600
       ],
       "id": "n-persist-reset",
@@ -690,8 +690,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2260,
-        760
+        3180,
+        720
       ],
       "id": "n-ans-need",
       "name": "Answer Callback (needSelect)"
@@ -724,7 +724,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2260,
+        2300,
         720
       ],
       "id": "n-handledone",
@@ -739,7 +739,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2460,
+        2740,
         720
       ],
       "id": "n-getcsv-forstats",
@@ -758,7 +758,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2660,
+        3620,
         720
       ],
       "id": "n-calc-stats",
@@ -776,7 +776,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2860,
+        3840,
         720
       ],
       "id": "n-send-stats",
@@ -812,7 +812,7 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2240,
+        2280,
         300
       ],
       "id": "n-getfile-xlsx",
@@ -832,7 +832,7 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        2440,
+        2500,
         300
       ],
       "id": "n-extract-xlsx",
@@ -847,7 +847,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2160,
+        2300,
         160
       ],
       "id": "get-csv-meta-for-orders",
@@ -866,7 +866,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2260,
+        2520,
         160
       ],
       "id": "render-orders-menu",
@@ -882,7 +882,7 @@
       "typeVersion": 1,
       "position": [
         2060,
-        300
+        340
       ],
       "id": "fetch-csv-meta-calopen",
       "name": "Fetch CSV Meta (calopen)",
@@ -918,8 +918,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2260,
-        300
+        2280,
+        340
       ],
       "id": "if-has-file-calopen",
       "name": "Has File? (calopen)"
@@ -935,7 +935,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2460,
+        2500,
         340
       ],
       "id": "answer-need-file",
@@ -987,7 +987,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2260,
+        2280,
         440
       ],
       "id": "if-has-cal-msg-clear",
@@ -1004,8 +1004,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2460,
-        420
+        2500,
+        440
       ],
       "id": "delete-calendar-msg",
       "name": "Delete Calendar Message"
@@ -1018,8 +1018,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2460,
-        480
+        2720,
+        440
       ],
       "id": "del-csv-data",
       "name": "Del csv_data",
@@ -1038,8 +1038,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2660,
-        480
+        2940,
+        440
       ],
       "id": "del-selected-dates",
       "name": "Del selected_dates",
@@ -1058,8 +1058,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2860,
-        480
+        3160,
+        440
       ],
       "id": "del-cal-msg-id",
       "name": "Del calendar_msg_id",
@@ -1120,7 +1120,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        3560,
+        3940,
         240
       ],
       "id": "get-month-render-smart",
@@ -1139,7 +1139,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3680,
+        4160,
         240
       ],
       "id": "ensure-month-smart",
@@ -1152,7 +1152,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3880,
+        4600,
         240
       ],
       "id": "render-calendar-smart",
@@ -1167,7 +1167,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        4080,
+        4820,
         240
       ],
       "id": "get-cal-msg-smart",
@@ -1204,7 +1204,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4280,
+        5040,
         240
       ],
       "id": "if-has-msg-smart",
@@ -1221,8 +1221,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        4480,
-        220
+        5260,
+        240
       ],
       "id": "edit-calendar-smart",
       "name": "Edit Calendar (smart)"
@@ -1238,8 +1238,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        4480,
-        280
+        5480,
+        240
       ],
       "id": "send-calendar-smart",
       "name": "Send Calendar (smart)"
@@ -1256,8 +1256,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        4680,
-        280
+        5700,
+        240
       ],
       "id": "persist-cal-msg-smart",
       "name": "Persist Calendar Msg ID (smart)",
@@ -1354,7 +1354,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3760,
+        4380,
         240
       ],
       "id": "compute-selection-summary",
@@ -1372,7 +1372,7 @@
       "typeVersion": 4.2,
       "position": [
         2140,
-        780
+        860
       ],
       "id": "send-upload-help",
       "name": "Send Upload Help"
@@ -1384,7 +1384,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2140,
+        2360,
         860
       ],
       "id": "clear-cache",
@@ -1398,7 +1398,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2320,
+        2580,
         860
       ],
       "id": "del-csv",
@@ -1418,7 +1418,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2480,
+        2800,
         860
       ],
       "id": "del-selected",
@@ -1438,7 +1438,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2640,
+        3020,
         860
       ],
       "id": "del-cal-msg",
@@ -1461,8 +1461,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2800,
-        860
+        3060,
+        520
       ],
       "id": "answer-callback-cleared",
       "name": "Answer Callback (cleared)"
@@ -1478,7 +1478,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2960,
+        3460,
         860
       ],
       "id": "send-start-prompt",
@@ -1509,8 +1509,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2460,
-        700
+        2520,
+        720
       ],
       "id": "has-selection",
       "name": "Has Selection?"
@@ -1540,8 +1540,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2280,
-        760
+        2960,
+        720
       ],
       "id": "has-csv",
       "name": "Has CSV?"
@@ -1557,8 +1557,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2480,
-        820
+        3400,
+        720
       ],
       "id": "answer-callback-no-file",
       "name": "Answer Callback (no-file)"
