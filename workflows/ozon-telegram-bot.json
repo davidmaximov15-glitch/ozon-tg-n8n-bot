@@ -662,7 +662,7 @@
         "key": "=ozon:sess:{{ $json.user_id }}:csv",
         "value": "={{ JSON.stringify({ reportType: $json.reportType, records: $json.records, availableDates: $json.availableDates, totalRecords: $json.totalRecords }) }}",
         "options": {
-          "ttl": 3600
+          "ttl": 259200
         }
       },
       "type": "n8n-nodes-base.redis",
@@ -788,7 +788,7 @@
         "key": "=ozon:sess:{{ $json.user_id }}:dates",
         "value": "={{ JSON.stringify($json.selectedDates || []) }}",
         "options": {
-          "ttl": 3600
+          "ttl": 86400
         }
       },
       "type": "n8n-nodes-base.redis",
@@ -863,7 +863,7 @@
         "key": "=ozon:sess:{{ $json.user_id }}:dates",
         "value": "={{ JSON.stringify($json.selectedDates || []) }}",
         "options": {
-          "ttl": 3600
+          "ttl": 86400
         }
       },
       "type": "n8n-nodes-base.redis",
@@ -1295,7 +1295,7 @@
         "key": "=ozon:ui:{{ $json.user_id }}:cal_month",
         "value": "={{ $json.month }}",
         "options": {
-          "ttl": 3600
+          "ttl": 86400
         }
       },
       "type": "n8n-nodes-base.redis",
@@ -1452,7 +1452,7 @@
         "key": "=ozon:ui:{{ $('Extract User Data').first().json.user_id }}:calendar_msg_id",
         "value": "={{ $json.result?.message_id || $json.message_id || $json.result?.message?.message_id }}",
         "options": {
-          "ttl": 3600
+          "ttl": 86400
         }
       },
       "type": "n8n-nodes-base.redis",
