@@ -198,82 +198,97 @@
         "rules": [
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "menu:orders",
+            "operation": "equal",
+            "value1": "={{ ($(\"Extract User Data\").first().json.text || \"\").trim() }}",
+            "value2": "/start",
+            "renameOutput": true,
+            "outputName": "text:/start"
+          },
+          {
+            "type": "string",
+            "operation": "equal",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": "menu:orders",
             "renameOutput": true,
             "outputName": "menu:orders"
           },
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "cal:open",
+            "operation": "equal",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": "cal:open",
             "renameOutput": true,
             "outputName": "cal:open"
           },
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "cal:prev",
+            "operation": "contains",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": ":prev",
             "renameOutput": true,
             "outputName": "cal:prev"
           },
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "cal:next",
+            "operation": "contains",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": ":next",
             "renameOutput": true,
             "outputName": "cal:next"
           },
           {
             "type": "string",
             "operation": "startsWith",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "date:",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": "date:",
             "renameOutput": true,
             "outputName": "date:*"
           },
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "dates:reset",
+            "operation": "equal",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": "dates:reset",
             "renameOutput": true,
             "outputName": "dates:reset"
           },
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "dates:done",
+            "operation": "equal",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": "dates:done",
             "renameOutput": true,
             "outputName": "dates:done"
           },
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ $('Extract User Data').first().json.callback_data || '' }}",
-            "rightValue": "file:clear",
+            "operation": "equal",
+            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
+            "value2": "file:clear",
             "renameOutput": true,
             "outputName": "file:clear"
           },
           {
             "type": "string",
-            "operation": "isEqual",
-            "leftValue": "={{ ($('Extract User Data').first().json.text || '').trim() }}",
-            "rightValue": "/start",
+            "operation": "matchesRegex",
+            "value1": "={{ ( $(\"Extract User Data\").first().json.document?.file_name || \"\" ).toLowerCase() }}",
+            "value2": "\\\\.csv$",
             "renameOutput": true,
-            "outputName": "text:/start"
+            "outputName": "file:csv"
+          },
+          {
+            "type": "string",
+            "operation": "matchesRegex",
+            "value1": "={{ ( $(\"Extract User Data\").first().json.document?.file_name || \"\" ).toLowerCase() }}",
+            "value2": "\\\\.xlsx$",
+            "renameOutput": true,
+            "outputName": "file:xlsx"
           }
         ],
         "options": {
-          "fallbackOutput": "extra",
+          "addIfNoMatch": true,
           "ignoreCase": false,
-          "lessStrictTypeValidation": false,
-          "sendDataToAllMatches": true
+          "sendDataToAllMatches": false
         }
       },
       "type": "n8n-nodes-base.switch",
@@ -1671,6 +1686,62 @@
         ],
         [
           {
+            "node": "Handle Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch CSV Meta (calopen)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Calendar Nav",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Calendar Nav",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Selected Dates (toggle)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reset Dates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Selected Dates (Done)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Calendar Msg ID (clear)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Ensure CSV Document",
             "type": "main",
             "index": 0
@@ -1685,64 +1756,7 @@
         ],
         [
           {
-            "node": "Handle Menu",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get Selected Dates (toggle)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Handle Calendar Nav",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get Selected Dates (Done)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Reset Dates",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [],
-        [
-          {
-            "node": "Fetch CSV Meta (calopen)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get Calendar Msg ID (clear)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
             "node": "Send Upload Help",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Clear Cache",
             "type": "main",
             "index": 0
           }
