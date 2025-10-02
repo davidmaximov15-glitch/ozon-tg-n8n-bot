@@ -510,12 +510,13 @@
       "main": [
         [{ "node": "gen-menu", "type": "main", "index": 0 }],
         [{ "node": "ensure-csv", "type": "main", "index": 0 }],
-        [{ "node": "handle-menu", "type": "main", "index": 0 }],
-        [{ "node": "get-month", "type": "main", "index": 0 }],
         [{ "node": "ensure-xlsx", "type": "main", "index": 0 }],
-        [{ "node": "reset-dates", "type": "main", "index": 0 }],
+        [{ "node": "handle-menu", "type": "main", "index": 0 }],
+        [{ "node": "toggle-date", "type": "main", "index": 0 }],
+        [{ "node": "get-month", "type": "main", "index": 0 }],
         [{ "node": "handle-done", "type": "main", "index": 0 }],
-        [{ "node": "get-selected", "type": "main", "index": 0 }]
+        [{ "node": "reset-dates", "type": "main", "index": 0 }],
+        []
       ]
     },
     "gen-menu": { "main": [[{ "node": "prep-menu", "type": "main", "index": 0 }]] },
