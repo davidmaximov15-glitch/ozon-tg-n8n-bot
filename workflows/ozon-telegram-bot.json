@@ -14,8 +14,8 @@
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [
-        240,
-        300
+        100,
+        100
       ],
       "id": "a1b2c3d4-1234-5678-9abc-def012345678",
       "name": "Telegram Trigger",
@@ -50,8 +50,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        480,
-        300
+        300,
+        100
       ],
       "id": "config-set-node-001",
       "name": "Config"
@@ -63,8 +63,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        720,
-        300
+        500,
+        100
       ],
       "id": "validate-config-node-001",
       "name": "Validate Config"
@@ -76,8 +76,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        960,
-        300
+        700,
+        100
       ],
       "id": "b2c3d4e5-2345-6789-abcd-ef0123456789",
       "name": "Extract User Data"
@@ -90,8 +90,8 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        1780,
-        420
+        2100,
+        240
       ],
       "id": "extract-from-file-001",
       "name": "Extract from File"
@@ -105,8 +105,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        680,
-        300
+        900,
+        100
       ],
       "id": "c3d4e5f6-3456-7890-bcde-f01234567890",
       "name": "Check Whitelist",
@@ -144,8 +144,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        900,
-        300
+        1300,
+        100
       ],
       "id": "d4e5f6a7-4567-8901-cdef-012345678901",
       "name": "Is Authorized?"
@@ -161,8 +161,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1120,
-        460
+        1500,
+        300
       ],
       "id": "e5f6a7b8-5678-9012-def0-123456789012",
       "name": "Unauthorized Response",
@@ -182,8 +182,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        1120,
-        140
+        1500,
+        100
       ],
       "id": "f6a7b8c9-6789-0123-ef01-234567890123",
       "name": "Check Admin",
@@ -321,8 +321,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        1340,
-        140
+        1700,
+        100
       ],
       "id": "a7b8c9d0-7890-1234-f012-345678901234",
       "name": "Route Message"
@@ -334,8 +334,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1560,
-        60
+        1900,
+        40
       ],
       "id": "b8c9d0e1-8901-2345-0123-456789012345",
       "name": "Generate Main Menu"
@@ -347,8 +347,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1560,
-        240
+        1900,
+        140
       ],
       "id": "d0e1f2a3-0123-4567-2345-678901234567",
       "name": "Handle Menu"
@@ -360,8 +360,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2220,
-        420
+        2300,
+        240
       ],
       "id": "parse-csv-node",
       "name": "Parse CSV"
@@ -373,8 +373,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2440,
-        420
+        2700,
+        240
       ],
       "id": "date-keyboard-node",
       "name": "Generate Date Keyboard"
@@ -386,8 +386,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2440,
-        600
+        2500,
+        400
       ],
       "id": "calc-stats-node",
       "name": "Calculate Statistics"
@@ -404,8 +404,8 @@
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        2660,
-        600
+        2700,
+        400
       ],
       "id": "send-statistics",
       "name": "Send Statistics",
@@ -428,8 +428,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2220,
-        540
+        2500,
+        240
       ],
       "id": "cache-to-redis",
       "name": "Cache to Redis",
@@ -447,8 +447,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1560,
-        600
+        1900,
+        400
       ],
       "id": "handle-date-callback",
       "name": "Handle Date Callback"
@@ -462,8 +462,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        1780,
-        600
+        2100,
+        400
       ],
       "id": "get-cached-data",
       "name": "Get Cached Data",
@@ -481,8 +481,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2000,
-        600
+        2300,
+        400
       ],
       "id": "merge-selection-data",
       "name": "Merge Selection with Data"
@@ -494,8 +494,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        790,
-        300
+        1100,
+        100
       ],
       "id": "validate-whitelist-code",
       "name": "Validate Whitelist"
@@ -507,8 +507,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1780,
-        60
+        2100,
+        40
       ],
       "id": "prepare-menu-msg",
       "name": "Prepare Menu"
@@ -525,8 +525,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2000,
-        60
+        2300,
+        40
       ],
       "id": "send-menu-http",
       "name": "Send Menu"
@@ -538,8 +538,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1780,
-        240
+        2100,
+        140
       ],
       "id": "prepare-menu-response-msg",
       "name": "Prepare Menu Response"
@@ -556,8 +556,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2000,
-        240
+        2300,
+        140
       ],
       "id": "send-menu-response-http",
       "name": "Send Menu Response"
@@ -569,7 +569,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2220,
+        2900,
         240
       ],
       "id": "prepare-date-selection-msg",
@@ -587,7 +587,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2440,
+        3100,
         240
       ],
       "id": "send-date-selection-http",
@@ -597,13 +597,15 @@
       "parameters": {
         "resource": "file",
         "fileId": "={{ $('Telegram Trigger').first().json.message.document.file_id }}",
-        "additionalFields": { "download": true }
+        "additionalFields": {
+          "download": true
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        1200,
-        500
+        1900,
+        240
       ],
       "id": "get-file-telegram-node",
       "name": "Get File from Telegram",
@@ -619,173 +621,281 @@
     "Telegram Trigger": {
       "main": [
         [
-          { "node": "Config", "type": "main", "index": 0 }
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Extract User Data": {
       "main": [
         [
-          { "node": "Check Whitelist", "type": "main", "index": 0 }
+          {
+            "node": "Check Whitelist",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Check Whitelist": {
       "main": [
         [
-          { "node": "Validate Whitelist", "type": "main", "index": 0 }
+          {
+            "node": "Validate Whitelist",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Is Authorized?": {
       "main": [
         [
-          { "node": "Check Admin", "type": "main", "index": 0 }
+          {
+            "node": "Check Admin",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Unauthorized Response", "type": "main", "index": 0 }
+          {
+            "node": "Unauthorized Response",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Check Admin": {
       "main": [
         [
-          { "node": "Route Message", "type": "main", "index": 0 }
+          {
+            "node": "Route Message",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Route Message": {
       "main": [
         [
-          { "node": "Generate Main Menu", "type": "main", "index": 0 }
+          {
+            "node": "Generate Main Menu",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Get File from Telegram", "type": "main", "index": 0 }
+          {
+            "node": "Get File from Telegram",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Handle Menu", "type": "main", "index": 0 }
+          {
+            "node": "Handle Menu",
+            "type": "main",
+            "index": 0
+          }
         ],
         [
-          { "node": "Handle Date Callback", "type": "main", "index": 0 }
+          {
+            "node": "Handle Date Callback",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Generate Main Menu": {
       "main": [
         [
-          { "node": "Prepare Menu", "type": "main", "index": 0 }
+          {
+            "node": "Prepare Menu",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Handle Menu": {
       "main": [
         [
-          { "node": "Prepare Menu Response", "type": "main", "index": 0 }
+          {
+            "node": "Prepare Menu Response",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Parse CSV": {
       "main": [
         [
-          { "node": "Cache to Redis", "type": "main", "index": 0 }
+          {
+            "node": "Cache to Redis",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Generate Date Keyboard": {
       "main": [
         [
-          { "node": "Prepare Date Selection", "type": "main", "index": 0 }
+          {
+            "node": "Prepare Date Selection",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Cache to Redis": {
       "main": [
         [
-          { "node": "Generate Date Keyboard", "type": "main", "index": 0 }
+          {
+            "node": "Generate Date Keyboard",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Handle Date Callback": {
       "main": [
         [
-          { "node": "Get Cached Data", "type": "main", "index": 0 }
+          {
+            "node": "Get Cached Data",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Get Cached Data": {
       "main": [
         [
-          { "node": "Merge Selection with Data", "type": "main", "index": 0 }
+          {
+            "node": "Merge Selection with Data",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Merge Selection with Data": {
       "main": [
         [
-          { "node": "Calculate Statistics", "type": "main", "index": 0 }
+          {
+            "node": "Calculate Statistics",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Calculate Statistics": {
       "main": [
         [
-          { "node": "Send Statistics", "type": "main", "index": 0 }
+          {
+            "node": "Send Statistics",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Validate Whitelist": {
       "main": [
         [
-          { "node": "Is Authorized?", "type": "main", "index": 0 }
+          {
+            "node": "Is Authorized?",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Prepare Menu": {
       "main": [
         [
-          { "node": "Send Menu", "type": "main", "index": 0 }
+          {
+            "node": "Send Menu",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Prepare Menu Response": {
       "main": [
         [
-          { "node": "Send Menu Response", "type": "main", "index": 0 }
+          {
+            "node": "Send Menu Response",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Prepare Date Selection": {
       "main": [
         [
-          { "node": "Send Date Selection", "type": "main", "index": 0 }
+          {
+            "node": "Send Date Selection",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Extract from File": {
       "main": [
         [
-          { "node": "Parse CSV", "type": "main", "index": 0 }
+          {
+            "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Get File from Telegram": {
       "main": [
         [
-          { "node": "Extract from File", "type": "main", "index": 0 }
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Config": {
       "main": [
         [
-          { "node": "Validate Config", "type": "main", "index": 0 }
+          {
+            "node": "Validate Config",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
     "Validate Config": {
       "main": [
         [
-          { "node": "Extract User Data", "type": "main", "index": 0 }
+          {
+            "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     }
@@ -795,7 +905,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "1-patched",
+  "versionId": "1-patched-layout",
   "meta": {
     "instanceId": "ozon-bot-instance"
   },
