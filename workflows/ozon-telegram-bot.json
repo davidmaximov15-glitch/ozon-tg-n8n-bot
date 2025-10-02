@@ -596,7 +596,7 @@
     {
       "parameters": {
         "resource": "file",
-        "fileId": "={{ $('Telegram Trigger').first().json.message.document.file_id }}",
+        "fileId": "={{ $('Extract User Data').first().json.document.file_id }}",
         "additionalFields": {
           "download": true
         }
