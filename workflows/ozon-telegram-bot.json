@@ -1,11 +1,8 @@
 {
-  "name": "Ozon Telegram Bot - Orders Analytics (patched, aligned)",
+  "name": "Ozon Telegram Bot - Orders Analytics (patched, calendar)",
   "nodes": [
     {
-      "parameters": {
-        "updates": ["message", "callback_query"],
-        "additionalFields": { "download": true }
-      },
+      "parameters": { "updates": ["message", "callback_query"], "additionalFields": { "download": true } },
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
       "position": [100, 100],
@@ -13,7 +10,6 @@
       "name": "Telegram Trigger",
       "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
     },
-
     {
       "parameters": {
         "assignments": {
@@ -27,68 +23,54 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [320, 100],
-      "id": "config-set-node-001",
+      "id": "config",
       "name": "Config"
     },
-
     {
       "parameters": {
-        "jsCode": "// 🔐 ПРОВЕРКА КОНФИГУРАЦИИ\nconst token = $json.TELEGRAM_BOT_TOKEN;\nconst superusers = $json.SUPERUSER_IDS;\nif (!token || token === 'YOUR_TELEGRAM_BOT_TOKEN_HERE') {\n  throw new Error('❌ TELEGRAM_BOT_TOKEN не настроен в Config node');\n}\nif (!superusers || superusers.trim() === '' || superusers === 'user_id_1,user_id_2') {\n  throw new Error('❌ SUPERUSER_IDS не настроены в Config node (замени user_id_1,user_id_2 на реальные ID)');\n}\nreturn { json: $json, binary: $binary };"
+        "jsCode": "// 🔐 Validate config\nconst token=$json.TELEGRAM_BOT_TOKEN; const su=$json.SUPERUSER_IDS;\nif(!token||token==='YOUR_TELEGRAM_BOT_TOKEN_HERE') throw new Error('❌ TELEGRAM_BOT_TOKEN не настроен');\nif(!su||su.trim()===''||su==='user_id_1,user_id_2') throw new Error('❌ SUPERUSER_IDS не настроены');\nreturn { json:$json, binary:$binary };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [540, 100],
-      "id": "validate-config-node-001",
+      "id": "validate-config",
       "name": "Validate Config"
     },
-
     {
       "parameters": {
-        "jsCode": "// Extract user data from Telegram Trigger\nconst telegramData = $('Telegram Trigger').first().json;\nconst message = telegramData.message;\nconst callback = telegramData.callback_query;\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\nconst callbackQueryId = callback?.id || '';\nreturn { json: { ...$json, user_id: String(userId), chat_id: String(chatId), message_text: messageText, callback_data: callbackData, callback_query_id: callbackQueryId, document: document }, binary: $binary };"
+        "jsCode": "// Extract user/callback\nconst t=$('Telegram Trigger').first().json; const m=t.message; const c=t.callback_query;\nconst userId=m?.from?.id||c?.from?.id; const chatId=m?.chat?.id||c?.message?.chat?.id;\nreturn { json: { ...$json, user_id:String(userId), chat_id:String(chatId), message_text:m?.text||'', callback_data:c?.data||'', callback_query_id:c?.id||'', document:m?.document||null }, binary:$binary };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [760, 100],
-      "id": "b2c3d4e5-2345-6789-abcd-ef0123456789",
+      "id": "extract-user",
       "name": "Extract User Data"
     },
-
     {
-      "parameters": {
-        "operation": "get",
-        "key": "=ozon:acl:whitelist:{{ $json.user_id }}",
-        "propertyName": "value"
-      },
+      "parameters": { "operation": "get", "key": "=ozon:acl:whitelist:{{ $json.user_id }}", "propertyName": "value" },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [980, 100],
-      "id": "c3d4e5f6-3456-7890-bcde-f01234567890",
+      "id": "check-whitelist",
       "name": "Check Whitelist",
       "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
     },
-
     {
       "parameters": {
-        "jsCode": "// 🔐 ПРОВЕРКА ДОСТУПА\nconst whitelistValue = $json.value;\nconst userId = $('Extract User Data').first().json.user_id;\nconst configSuperusers = $('Config').first().json.SUPERUSER_IDS || '';\nconst superuserIds = configSuperusers.split(',').map(id => id.trim()).filter(id => id);\nconst isSuperuser = superuserIds.includes(userId);\nconst isAdmin = whitelistValue === '1';\nif (!isSuperuser && !isAdmin) { throw new Error('⛔ Access denied. Only superusers and admins can use this bot.'); }\nreturn { json: { ...$('Extract User Data').first().json, is_superuser: isSuperuser, is_admin: isAdmin, redis_value: whitelistValue } };"
+        "jsCode": "// access\nconst w=$json.value; const uid=$('Extract User Data').first().json.user_id; const su=$('Config').first().json.SUPERUSER_IDS||'';\nconst suIds=su.split(',').map(s=>s.trim()).filter(Boolean); const isSu=suIds.includes(uid); const isAdmin=w==='1';\nif(!isSu&&!isAdmin) throw new Error('⛔ Access denied');\nreturn { json:{ ...$('Extract User Data').first().json, is_superuser:isSu, is_admin:isAdmin, redis_value:w } };"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [1200, 100],
-      "id": "validate-whitelist-code",
+      "id": "validate-whitelist",
       "name": "Validate Whitelist"
     },
-
     {
       "parameters": {
         "conditions": {
           "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 },
           "conditions": [
-            {
-              "id": "is-superuser-or-admin",
-              "leftValue": "={{ $json.is_superuser === true || $json.is_admin === true }}",
-              "rightValue": "true",
-              "operator": { "type": "boolean", "operation": "true", "singleValue": true }
-            }
+            { "id": "ok", "leftValue": "={{ $json.is_superuser === true || $json.is_admin === true }}", "rightValue": "true", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }
           ],
           "combinator": "and"
         }
@@ -96,38 +78,31 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [1420, 100],
-      "id": "d4e5f6a7-4567-8901-cdef-012345678901",
+      "id": "is-authorized",
       "name": "Is Authorized?"
     },
-
-    {
-      "parameters": {
-        "operation": "get",
-        "key": "=ozon:acl:admins:{{ $('Extract User Data').first().json.user_id }}",
-        "propertyName": "value"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [1640, 100],
-      "id": "f6a7b8c9-6789-0123-ef01-234567890123",
-      "name": "Check Admin",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
-    },
-
     {
       "parameters": {
         "chatId": "={{ $('Extract User Data').first().json.chat_id }}",
-        "text": "⛔ <b>Доступ запрещен</b>. Вы не в белом списке.\n\nОбратитесь к администратору для получения доступа.",
+        "text": "⛔ <b>Доступ запрещен</b>.\n\nОбратитесь к администратору.",
         "additionalFields": { "appendAttribution": false, "parse_mode": "HTML" }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1640, 260],
-      "id": "e5f6a7b8-5678-9012-def0-123456789012",
+      "position": [1420, 260],
+      "id": "unauth",
       "name": "Unauthorized Response",
       "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
     },
-
+    {
+      "parameters": { "operation": "get", "key": "=ozon:acl:admins:{{ $('Extract User Data').first().json.user_id }}", "propertyName": "value" },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [1640, 100],
+      "id": "check-admin",
+      "name": "Check Admin",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
     {
       "parameters": {
         "rules": {
@@ -144,8 +119,13 @@
             ], "combinator": "or" } },
             { "outputKey": "Menu", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "menu:", "operator": { "type": "string", "operation": "startsWith" } }], "combinator": "and" } },
             { "outputKey": "DateSelection", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "date:", "operator": { "type": "string", "operation": "startsWith" } }], "combinator": "and" } },
+            { "outputKey": "CalNav", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [
+              { "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "calnav:", "operator": { "type": "string", "operation": "startsWith" } },
+              { "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "cal:", "operator": { "type": "string", "operation": "startsWith" } }
+            ], "combinator": "or" } },
             { "outputKey": "DatesDone", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "dates:done", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
-            { "outputKey": "DatesReset", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "dates:reset", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
+            { "outputKey": "DatesReset", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "dates:reset", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
+            { "outputKey": "Noop", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "noop", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
           ]
         },
         "options": { "fallbackOutput": "none" }
@@ -153,381 +133,222 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [1860, 100],
-      "id": "a7b8c9d0-7890-1234-f012-345678901234",
+      "id": "route",
       "name": "Route Message"
     },
-
     {
       "parameters": {
-        "jsCode": "const chatId = $('Extract User Data').first().json.chat_id;\nconst isAdmin = $('Check Admin').first().json.value === '1';\nconst keyboard = { inline_keyboard: [ [{text:'📦 Заказы',callback_data:'menu:orders'}], [{text:'🎯 Кластеры',callback_data:'menu:clusters'}] ] };\nif (isAdmin) keyboard.inline_keyboard.push([{text:'⚙️ Админка',callback_data:'menu:admin'}]);\nreturn [{ json: { chat_id: chatId, text: '🤖 <b>Ozon Analytics Bot</b>\\n\\nВыберите раздел:', reply_markup: keyboard } }];"
+        "jsCode": "const chatId=$('Extract User Data').first().json.chat_id; const isAdmin=$('Check Admin').first().json.value==='1';\nconst kb={ inline_keyboard:[[ {text:'📦 Заказы',callback_data:'menu:orders'} ],[ {text:'🎯 Кластеры',callback_data:'menu:clusters'} ]]}; if(isAdmin) kb.inline_keyboard.push([{text:'⚙️ Админка',callback_data:'menu:admin'}]);\nreturn [{ json:{ chat_id:chatId, text:'🤖 <b>Ozon Analytics Bot</b>\\n\\nВыберите раздел:', reply_markup:kb } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2080, 40],
-      "id": "b8c9d0e1-8901-2345-0123-456789012345",
+      "id": "gen-menu",
       "name": "Generate Main Menu"
     },
-
     {
       "parameters": {
-        "jsCode": "const chatId = $('Extract User Data').first().json.chat_id;\nconst callbackData = $('Extract User Data').first().json.callback_data;\nconst isAdmin = $('Check Admin').first().json.value === '1';\nconst action = callbackData.replace('menu:', '');\nlet text = '';\nlet keyboard = { inline_keyboard: [[{text:'« Назад',callback_data:'/start'}]] };\nif (action === 'orders') { text = '📦 <b>Раздел: Заказы</b>\\n\\nОтправьте файл с отчетом Ozon (FBO или FBS) для анализа.\\n\\n<b>Формат:</b> до 20MB, .csv или .xlsx'; }\nelse if (action === 'clusters') { text = '🎯 <b>Раздел: Кластеры</b>\\n\\n🚧 В разработке.'; }\nelse if (action === 'admin' && isAdmin) { text = '⚙️ <b>Админка</b>\\n\\nУправление доступом:'; keyboard = { inline_keyboard: [[{text:'👥 Пользователи',callback_data:'admin:users'}],[{text:'« Назад',callback_data:'/start'}]] }; }\nreturn [{ json: { chat_id: chatId, text, reply_markup: keyboard } }];"
+        "jsCode": "const chatId=$('Extract User Data').first().json.chat_id; const cb=$('Extract User Data').first().json.callback_data; const isAdmin=$('Check Admin').first().json.value==='1';\nconst action=cb.replace('menu:',''); let text=''; let kb={ inline_keyboard:[[ {text:'« Назад',callback_data:'/start'} ]] };\nif(action==='orders'){ text='📦 <b>Раздел: Заказы</b>\\n\\nОтправьте отчёт .csv/.xlsx (до 20MB)'; }\nelse if(action==='clusters'){ text='🎯 <b>Раздел: Кластеры</b>\\n\\n🚧 В разработке.'; }\nelse if(action==='admin'&&isAdmin){ text='⚙️ <b>Админка</b>\\n\\nУправление доступом:'; kb={ inline_keyboard:[[ {text:'👥 Пользователи',callback_data:'admin:users'} ],[ {text:'« Назад',callback_data:'/start'} ]]}; }\nreturn [{ json:{ chat_id:chatId, text, reply_markup:kb } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2080, 160],
-      "id": "d0e1f2a3-0123-4567-2345-678901234567",
+      "id": "handle-menu",
       "name": "Handle Menu"
     },
-
     {
       "parameters": {
-        "jsCode": "const doc = $('Extract User Data').first().json.document || {};\nconst name = (doc.file_name || '').toLowerCase();\nconst mime = (doc.mime_type || '').toLowerCase();\nconst isCsv = mime==='text/csv' || mime==='application/vnd.ms-excel' || name.endsWith('.csv');\nif (!doc.file_id || !isCsv) return [];\nreturn [{ json: $json }];"
+        "jsCode": "const d=$('Extract User Data').first().json.document||{}; const name=(d.file_name||'').toLowerCase(); const mime=(d.mime_type||'').toLowerCase();\nconst isCsv=mime==='text/csv'||mime==='application/vnd.ms-excel'||name.endsWith('.csv'); if(!d.file_id||!isCsv) return []; return [{ json:$json }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2080, 240],
-      "id": "ensure-document",
-      "name": "Ensure Document"
+      "id": "ensure-csv",
+      "name": "Ensure Document (CSV)"
     },
-
     {
-      "parameters": {
-        "resource": "file",
-        "fileId": "={{ $('Extract User Data').first().json.document.file_id }}",
-        "additionalFields": { "download": true }
-      },
+      "parameters": { "resource": "file", "fileId": "={{ $('Extract User Data').first().json.document.file_id }}", "additionalFields": { "download": true } },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [2300, 240],
-      "id": "get-file-telegram-node",
+      "id": "dl-csv",
       "name": "Get File from Telegram",
       "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
     },
-
     {
-      "parameters": {
-        "operation": "csv",
-        "options": { "delimiter": ";", "relaxQuotes": true }
-      },
+      "parameters": { "operation": "csv", "options": { "delimiter": ";", "relaxQuotes": true } },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [2520, 240],
-      "id": "extract-from-file-001",
+      "id": "extract-csv",
       "name": "Extract from File"
     },
-
     {
       "parameters": {
-        "jsCode": "function parseAsMsk(dateStr){ if(!dateStr) return null; let d=dateStr; if(/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(d)){ d=d.replace(' ','T')+'Z'; } const base=new Date(d); if(isNaN(base)) return null; return new Date(base.getTime()+3*60*60*1000); }\nconst rawItems=$input.all().map(i=>i.json.row??i.json).filter(Boolean);\nif(rawItems.length===0){ throw new Error('Extract from File не вернул ни одной строки'); }\nconst RE_BOM=/^\\uFEFF/; const RE_QUOTES_AROUND=/^\"+|\"+$/g; const RE_NBSP=/\\u00A0/g; const RE_MULTI_SPACE=/\\s+/g;\nfunction cleanKey(k){ if(k==null) return ''; return String(k).replace(RE_BOM,'').replace(RE_NBSP,' ').replace(RE_QUOTES_AROUND,'').trim().replace(RE_MULTI_SPACE,' '); }\nfunction cleanVal(v){ if(v==null) return ''; return String(v).replace(RE_BOM,'').trim(); }\nfunction toNumberLoose(v,f=0){ if(v==null) return f; const s=String(v).replace(/\\s/g,'').replace(',','.'); const n=Number(s); return Number.isFinite(n)?n:f; }\nfunction normalizeRow(row){ const out={}; for(const k of Object.keys(row)){ const ck=cleanKey(k); out[ck]=cleanVal(row[k]); } return out; }\nconst rows=rawItems.map(normalizeRow);\nconst allKeys=new Set(); rows.slice(0,5).forEach(r=>Object.keys(r).forEach(k=>allKeys.add(k))); const keysLower=Array.from(allKeys).map(k=>k.toLowerCase());\nfunction detectReportType(keys){ const has=f=>keys.some(k=>k.includes(f)); const isFBS=has('способ отгрузки')||has('перевозчик')||has('название метода')||has('дата отгрузки без просрочки'); const isFBO=has('юридическое лицо')||has('оценка отгрузки')||has('принят в обработку')||has('дата отгрузки'); if(isFBS&&!isFBO) return 'FBS'; if(isFBO&&!isFBS) return 'FBO'; if(has('номер заказа')||has('№ заказа')) return 'FBO'; return 'FBO'; }\nconst reportType=detectReportType(keysLower);\nfunction pick(record,candidates,fallback=''){ for(const name of candidates){ const c=cleanKey(name); if(record[c]!==undefined && String(record[c]).trim()!==''){ return record[c]; } } const recKeys=Object.keys(record); for(const name of candidates){ const cLower=cleanKey(name).toLowerCase(); const found=recKeys.find(k=>k.toLowerCase()===cLower); if(found && String(record[found]).trim()!==''){ return record[found]; } } return fallback; }\nconst records=[]; for(const r of rows){ let order_id,sku,quantity,price,created_at,status; if(reportType==='FBO'){ order_id=pick(r,['Номер заказа']); sku=pick(r,['Артикул','OZON id','OZON ID']); quantity=toNumberLoose(pick(r,['Количество'],1),1); price=toNumberLoose(pick(r,['Ваша цена','Сумма отправления'],0),0); created_at=pick(r,['Принят в обработку','Дата отгрузки','Фактическая дата передачи в доставку']); status=pick(r,['Статус'],''); } else { order_id=pick(r,['Номер заказа','№ заказа']); sku=pick(r,['Артикул продавца','Артикул','OZON id','OZON ID']); quantity=toNumberLoose(pick(r,['Количество','Кол-во'],1),1); price=toNumberLoose(pick(r,['Ваша цена','Сумма отправления'],0),0); created_at=pick(r,['Принят в обработку','Дата отгрузки','Дата отгрузки без просрочки']); status=pick(r,['Статус'],''); } if(!order_id||!sku) continue; records.push({ order_id:cleanVal(order_id), sku:cleanVal(sku), quantity, price, created_at:cleanVal(created_at), status:String(status||'').toLowerCase() }); }\nconst dates=new Set(); for(const rec of records){ const m=parseAsMsk(rec.created_at); if(!m) continue; dates.add(m.toISOString().split('T')[0]); }\nconst availableDates=Array.from(dates).sort(); const chatId=$('Extract User Data').first().json.chat_id; const userId=$('Extract User Data').first().json.user_id;\nreturn [{ json:{ reportType, records, availableDates, totalRecords: records.length, chat_id: chatId, user_id: userId } }];"
+        "jsCode": "function parseAsMsk(s){ if(!s) return null; let d=s; if(/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(d)) d=d.replace(' ','T')+'Z'; const base=new Date(d); if(isNaN(base)) return null; return new Date(base.getTime()+3*60*60*1000); }\nconst raw=$input.all().map(i=>i.json.row??i.json).filter(Boolean); if(!raw.length) throw new Error('Extract from File пуст');\nconst RE_BOM=/^\\uFEFF/; const RE_NBSP=/\\u00A0/g; const RE_Q=/^\"+|\"+$/g; const RE_MS=/\\s+/g;\nconst ck=k=>String(k??'').replace(RE_BOM,'').replace(RE_NBSP,' ').replace(RE_Q,'').trim().replace(RE_MS,' ');\nconst cv=v=>String(v??'').replace(RE_BOM,'').trim(); const num=(v,f=0)=>{ const n=Number(String(v??'').replace(/\\s/g,'').replace(',','.')); return Number.isFinite(n)?n:f; };\nconst rows=raw.map(r=>{ const o={}; for(const k of Object.keys(r)) o[ck(k)]=cv(r[k]); return o; });\nconst keys=Array.from(new Set(Object.keys(rows[0]||{}))).map(k=>k.toLowerCase()); const has=f=>keys.some(k=>k.includes(f));\nconst type=(has('способ отгрузки')||has('перевозчик')||has('название метода')||has('дата отгрузки без просрочки'))&&! (has('юридическое лицо')||has('оценка отгрузки')||has('принят в обработку')||has('дата отгрузки')) ? 'FBS':'FBO';\nconst pick=(rec,cands,fb='')=>{ for(const n of cands){ const c=ck(n); if(rec[c]!=null && String(rec[c]).trim()!=='') return rec[c]; } const rk=Object.keys(rec); for(const n of cands){ const cl=ck(n).toLowerCase(); const f=rk.find(k=>k.toLowerCase()===cl); if(f && String(rec[f]).trim()!=='') return rec[f]; } return fb; };\nconst out=[]; for(const r of rows){ let order_id,sku,quantity,price,created_at,status; if(type==='FBO'){ order_id=pick(r,['Номер заказа']); sku=pick(r,['Артикул','OZON id','OZON ID']); quantity=num(pick(r,['Количество'],1),1); price=num(pick(r,['Ваша цена','Сумма отправления'],0),0); created_at=pick(r,['Принят в обработку','Дата отгрузки','Фактическая дата передачи в доставку']); status=pick(r,['Статус'],''); } else { order_id=pick(r,['Номер заказа','№ заказа']); sku=pick(r,['Артикул продавца','Артикул','OZON id','OZON ID']); quantity=num(pick(r,['Количество','Кол-во'],1),1); price=num(pick(r,['Ваша цена','Сумма отправления'],0),0); created_at=pick(r,['Принят в обработку','Дата отгрузки','Дата отгрузки без просрочки']); status=pick(r,['Статус'],''); } if(!order_id||!sku) continue; out.push({ order_id:cv(order_id), sku:cv(sku), quantity, price, created_at:cv(created_at), status:String(status||'').toLowerCase() }); }\nconst set=new Set(); for(const r of out){ const d=parseAsMsk(r.created_at); if(!d) continue; set.add(d.toISOString().split('T')[0]); }\nconst availableDates=Array.from(set).sort(); return [{ json:{ reportType:type, records:out, availableDates, totalRecords:out.length, chat_id:$('Extract User Data').first().json.chat_id, user_id:$('Extract User Data').first().json.user_id } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [2740, 240],
-      "id": "parse-csv-node",
+      "id": "parse-report",
       "name": "Parse Report File"
     },
-
     {
-      "parameters": {
-        "operation": "set",
-        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
-        "value": "={{ JSON.stringify({ reportType: $json.reportType, records: $json.records, availableDates: $json.availableDates, totalRecords: $json.totalRecords }) }}",
-        "options": { "ttl": 3600 }
-      },
+      "parameters": { "operation": "set", "key": "=ozon:cache:{{ $json.user_id }}:csv_data", "value": "={{ JSON.stringify({ reportType: $json.reportType, records: $json.records, availableDates: $json.availableDates, totalRecords: $json.totalRecords }) }}", "options": { "ttl": 3600 } },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [2960, 240],
-      "id": "cache-to-redis",
-      "name": "Cache to Redis",
+      "id": "cache-csv",
+      "name": "Cache CSV Meta",
       "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
     },
-
     {
       "parameters": {
-        "jsCode": "const parsedData=$input.first().json; const availableDates=parsedData.availableDates;\nif(availableDates.length===0){ return [{ json:{ chat_id:parsedData.chat_id, text:'❌ В файле не найдены даты', reply_markup:null } }]; }\nconst keyboard={ inline_keyboard: availableDates.map(date=>[{ text:date, callback_data:`date:${date}` }]) };\nreturn [{ json:{ chat_id: parsedData.chat_id, text:`📅 Выберите дату для анализа\\n\\nТип отчета: ${parsedData.reportType}\\nВсего записей: ${parsedData.totalRecords}`, reply_markup: keyboard } }];"
+        "jsCode": "// pick initial month from availableDates[0]\nconst chat=$json.chat_id; const user=$json.user_id; const dates=$json.availableDates||[]; const m=(dates[0]||'').slice(0,7);\nreturn [{ json:{ chat_id:chat, user_id:user, cal_month:m||new Date().toISOString().slice(0,7) } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [3180, 240],
-      "id": "date-keyboard-node",
-      "name": "Generate Date Keyboard"
+      "id": "calc-initial-month",
+      "name": "Calc Initial Month"
     },
-
     {
-      "parameters": {
-        "jsCode": "const input=$json; const inlineKeyboard=input.reply_markup?.inline_keyboard||[]; return [{ json:{ chat_id:input.chat_id, text:input.text, parse_mode:'HTML', reply_markup:{ inline_keyboard:inlineKeyboard } } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [3400, 240],
-      "id": "prepare-date-selection-msg",
-      "name": "Prepare Date Selection"
-    },
-
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [3620, 240],
-      "id": "send-date-selection-http",
-      "name": "Send Date Selection"
-    },
-
-    {
-      "parameters": {
-        "jsCode": "const callbackData=$('Extract User Data').first().json.callback_data; const selectedDate=callbackData.replace('date:',''); const userId=$('Extract User Data').first().json.user_id;\nreturn [{ json:{ selectedDate, user_id:userId, chat_id:$('Extract User Data').first().json.chat_id, startTime:'00:00', endTime:'23:59' } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2080, 520],
-      "id": "handle-date-callback",
-      "name": "Handle Date Callback"
-    },
-
-    {
-      "parameters": {
-        "operation": "get",
-        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
-        "propertyName": "value"
-      },
+      "parameters": { "operation": "set", "key": "=ozon:cache:{{ $json.user_id }}:cal_month", "value": "={{ $json.cal_month }}", "options": { "ttl": 3600 } },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2300, 520],
-      "id": "get-cached-data",
-      "name": "Get Cached Data",
+      "position": [3400, 240],
+      "id": "persist-month",
+      "name": "Persist Cal Month",
       "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
     },
-
     {
-      "parameters": {
-        "jsCode": "// Address inputs by index with fallback for compatibility\nconst fromPort0=$input.all(0); const fromPort1=$input.all(1);\nconst sel=(fromPort0[0]?.json)||$input.first().json; const cachedRaw=(fromPort1[0]?.json?.value)??$input.last().json?.value;\nlet cachedData={}; try{ cachedData=cachedRaw?JSON.parse(cachedRaw):{}; }catch(e){ cachedData={}; }\nreturn [{ json:{ ...cachedData, selectedDates: sel.selectedDates, startTime: sel.startTime, endTime: sel.endTime, chat_id: sel.chat_id } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2520, 520],
-      "id": "merge-selection-data",
-      "name": "Merge Selection with Data"
-    },
-
-    {
-      "parameters": {
-        "jsCode": "function parseAsMsk(dateStr){ if(!dateStr) return null; let d=dateStr; if(/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(d)){ d=d.replace(' ','T')+'Z'; } const base=new Date(d); if(isNaN(base)) return null; return new Date(base.getTime()+3*60*60*1000); }\nfunction filterRecordsByDateTime(records,datesOrOne,startTime,endTime){ const dates=Array.isArray(datesOrOne)?datesOrOne:[datesOrOne]; const set=new Set(dates.filter(Boolean)); return records.filter(record=>{ const mskDate=parseAsMsk(record.created_at); if(!mskDate) return false; const recordDateStr=mskDate.toISOString().split('T')[0]; if(!set.has(recordDateStr)) return false; const recordTimeStr=mskDate.toTimeString().split(' ')[0].substring(0,5); return recordTimeStr>=startTime && recordTimeStr<=endTime; }); }\nfunction calculateStatistics(records,datesOrOne,startTime,endTime){ const filteredRecords=filterRecordsByDateTime(records,datesOrOne,startTime,endTime); if(filteredRecords.length===0){ return { date:datesOrOne, startTime, endTime, totalOrders:0, totalCancellations:0, totalRevenue:0, skuStats:{}, message:'Нет данных за указанный период' }; }\n const statsBySku={}; const revenueStatuses=['доставлен','доставляется','ожидает сборки','ожидает отгрузки']; const cancelStatuses=['отменён','отменен','возврат'];\n filteredRecords.forEach(record=>{ const sku=record.sku; const status=record.status.toLowerCase(); const quantity=record.quantity||1; const price=record.price||0; if(!statsBySku[sku]){ statsBySku[sku]={ totalOrders:0, cancellations:0, totalRevenue:0, weightedPriceSum:0, weightedQuantitySum:0, avgPrice:0 }; }\n statsBySku[sku].totalOrders += quantity; if(cancelStatuses.some(s=>status.includes(s))){ statsBySku[sku].cancellations += quantity; } if(revenueStatuses.some(s=>status.includes(s))){ statsBySku[sku].totalRevenue += price*quantity; statsBySku[sku].weightedPriceSum += price*quantity; statsBySku[sku].weightedQuantitySum += quantity; } });\n Object.keys(statsBySku).forEach(sku=>{ const s=statsBySku[sku]; if(s.weightedQuantitySum>0){ s.avgPrice=s.weightedPriceSum/s.weightedQuantitySum; } });\n let totalOrders=0,totalCancellations=0,totalRevenue=0; Object.values(statsBySku).forEach(s=>{ totalOrders+=s.totalOrders; totalCancellations+=s.cancellations; totalRevenue+=s.totalRevenue; });\n return { date:datesOrOne, startTime, endTime, totalOrders, totalCancellations, totalRevenue, skuStats:statsBySku }; }\nfunction formatStatisticsMessage(stats){ let message=`📊 <b>Статистика заказов</b>\\n\\n`; const datesLabel=Array.isArray(stats.date)?stats.date.join(', '):stats.date; message+=`📅 Даты: ${datesLabel}\\n`; message+=`⏰ Время: ${stats.startTime} - ${stats.endTime}\\n\\n`; if(stats.totalOrders===0){ message+=stats.message||'Нет данных'; return message; } const sortedSkus=Object.keys(stats.skuStats).sort(); sortedSkus.forEach(sku=>{ const s=stats.skuStats[sku]; message+=`<b>${sku}</b>\\n`; message+=`  • Заказов: ${s.totalOrders}\\n`; message+=`  • Отмен: ${s.cancellations}\\n`; message+=`  • Средняя цена: ${s.avgPrice.toFixed(2)} ₽\\n`; message+=`  • Сумма: ${s.totalRevenue.toFixed(2)} ₽\\n\\n`; }); message+=`<b>ИТОГО:</b>\\n`; message+=`  • Всего заказов: ${stats.totalOrders}\\n`; message+=`  • Всего отмен: ${stats.totalCancellations}\\n`; message+=`  • Общая сумма: ${stats.totalRevenue.toFixed(2)} ₽\\n`; return message; }\nconst parsedData=$input.first().json; const datesOrOne=($json.selectedDates && $json.selectedDates.length)?$json.selectedDates:($json.selectedDate||parsedData.availableDates[0]); const startTime=$json.startTime||'00:00'; const endTime=$json.endTime||'23:59'; const stats=calculateStatistics(parsedData.records,datesOrOne,startTime,endTime); const message=formatStatisticsMessage(stats);\nreturn [{ json:{ chat_id:parsedData.chat_id, text:message, stats, parsed_data:parsedData } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2740, 520],
-      "id": "calc-stats-node",
-      "name": "Calculate Statistics"
-    },
-
-    {
-      "parameters": {
-        "chatId": "={{ $json.chat_id }}",
-        "text": "={{ $json.text }}",
-        "additionalFields": { "parse_mode": "HTML", "appendAttribution": false }
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [2960, 520],
-      "id": "send-statistics",
-      "name": "Send Statistics",
-      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
-    },
-
-    {
-      "parameters": {
-        "jsCode": "const input=$json; const inlineKeyboard=input.reply_markup?.inline_keyboard||[]; return [{ json:{ chat_id:input.chat_id, text:input.text, parse_mode:'HTML', reply_markup:{ inline_keyboard:inlineKeyboard } } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2300, 40],
-      "id": "prepare-menu-msg",
-      "name": "Prepare Menu"
-    },
-
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [2520, 40],
-      "id": "send-menu-http",
-      "name": "Send Menu"
-    },
-
-    {
-      "parameters": {
-        "jsCode": "const input=$json; const inlineKeyboard=input.reply_markup?.inline_keyboard||[]; return [{ json:{ chat_id:input.chat_id, text:input.text, parse_mode:'HTML', reply_markup:{ inline_keyboard:inlineKeyboard } } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2300, 160],
-      "id": "prepare-menu-response-msg",
-      "name": "Prepare Menu Response"
-    },
-
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [2520, 160],
-      "id": "send-menu-response-http",
-      "name": "Send Menu Response"
-    },
-
-    {
-      "parameters": {
-        "jsCode": "const doc=$('Extract User Data').first().json.document || {}; const name=(doc.file_name||'').toLowerCase(); const mime=(doc.mime_type||'').toLowerCase(); const isXlsx = mime==='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || name.endsWith('.xlsx'); if(!doc.file_id || !isXlsx) return []; return [{ json:$json }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2080, 300],
-      "id": "ensure-document-xlsx",
-      "name": "Ensure XLSX Document"
-    },
-
-    {
-      "parameters": {
-        "resource": "file",
-        "fileId": "={{ $('Extract User Data').first().json.document.file_id }}",
-        "additionalFields": { "download": true }
-      },
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [2300, 300],
-      "id": "get-file-telegram-xlsx",
-      "name": "Get XLSX from Telegram",
-      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
-    },
-
-    {
-      "parameters": { "operation": "xlsx" },
-      "type": "n8n-nodes-base.extractFromFile",
-      "typeVersion": 1,
-      "position": [2520, 300],
-      "id": "extract-from-file-xlsx",
-      "name": "Extract from File (XLSX)"
-    },
-
-    {
-      "parameters": {
-        "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:selected_dates",
-        "propertyName": "value"
-      },
+      "parameters": { "operation": "get", "key": "=ozon:cache:{{ $json.user_id }}:selected_dates", "propertyName": "value" },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [1860, 520],
-      "id": "get-selected-dates",
+      "position": [2080, 620],
+      "id": "get-selected",
       "name": "Get Selected Dates",
       "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
     },
-
     {
-      "parameters": {
-        "jsCode": "const dateStr=$('Extract User Data').first().json.callback_data.replace('date:',''); const userId=$('Extract User Data').first().json.user_id; let selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){ selected=[]; }\nconst MAX=3; if(selected.includes(dateStr)){ selected=selected.filter(d=>d!==dateStr); return [{ json:{ user_id:userId, selectedDates:selected, hitLimit:false } }]; }\nif(selected.length>=MAX){ return [{ json:{ user_id:userId, selectedDates:selected, hitLimit:true } }]; }\nselected.push(dateStr); return [{ json:{ user_id:userId, selectedDates:selected, hitLimit:false } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [2080, 620],
-      "id": "toggle-date",
-      "name": "Toggle Date"
-    },
-
-    {
-      "parameters": {
-        "operation": "set",
-        "key": "=ozon:cache:{{ $json.user_id }}:selected_dates",
-        "value": "={{ JSON.stringify($json.selectedDates || []) }}",
-        "options": { "ttl": 3600 }
-      },
+      "parameters": { "operation": "get", "key": "=ozon:cache:{{ $json.user_id }}:csv_data", "propertyName": "value" },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2300, 620],
-      "id": "persist-selected-dates",
-      "name": "Persist Selected Dates",
+      "position": [3620, 240],
+      "id": "refetch-csv-for-cal",
+      "name": "Fetch CSV Meta (for calendar)",
       "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
     },
-
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
+        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:cal_month",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2520, 620],
-      "id": "fetch-csv-meta",
-      "name": "Fetch Cached CSV Meta",
+      "position": [1840, 520],
+      "id": "get-month",
+      "name": "Get Current Month",
       "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
     },
-
     {
       "parameters": {
-        "jsCode": "const chatId=$('Extract User Data').first().json.chat_id; let available=[]; try{ const raw=$('Fetch Cached CSV Meta').first().json.value; const obj=raw?JSON.parse(raw):{}; available=Array.isArray(obj.availableDates)?obj.availableDates:[]; }catch(e){ available=[]; }\nconst selected=$json.selectedDates||[]; const selectedLine=selected.length?`Выбрано: ${selected.join(', ')}`:'Выберите до 3 дат:';\nconst rows=available.map(d=>([{ text:(selected.includes(d)?'☑ ':'▫ ')+d, callback_data:`date:${d}` }]));\nconst controls=[]; if(selected.length>0){ controls.push({ text:'✅ Готово', callback_data:'dates:done' }); } else { controls.push({ text:'🔒 Готово', callback_data:'noop' }); } controls.push({ text:'🗑 Сброс', callback_data:'dates:reset' });\nconst keyboard={ inline_keyboard:[...rows, controls] };\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${selectedLine}`, reply_markup: keyboard } }];"
+        "jsCode": "// Handle calnav:* or cal:YYYY-MM\nconst cb=$('Extract User Data').first().json.callback_data;\nfunction addMonths(ym,delta){ const [y,m]=ym.split('-').map(n=>+n); const d=new Date(y,m-1,1); d.setMonth(d.getMonth()+delta); const yy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); return `${yy}-${mm}`; }\nlet next=$('Get Current Month').first().json.value||new Date().toISOString().slice(0,7);\nif(cb.startsWith('calnav:')){ const dir=cb.split(':')[1]; next=dir==='next'?addMonths(next,1):addMonths(next,-1); }\nif(cb.startsWith('cal:')){ next=cb.split(':')[1]; }\nreturn [{ json:{ user_id:$('Extract User Data').first().json.user_id, chat_id:$('Extract User Data').first().json.chat_id, cal_month:next } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2740, 620],
-      "id": "render-multi-date-kb",
-      "name": "Render Multi-Date Keyboard"
+      "position": [2060, 520],
+      "id": "handle-calnav",
+      "name": "Handle Calendar Nav"
     },
-
+    {
+      "parameters": { "operation": "set", "key": "=ozon:cache:{{ $json.user_id }}:cal_month", "value": "={{ $json.cal_month }}", "options": { "ttl": 3600 } },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2280, 520],
+      "id": "persist-month-on-nav",
+      "name": "Persist Month (Nav)",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
+    {
+      "parameters": { "operation": "get", "key": "=ozon:cache:{{ $json.user_id }}:csv_data", "propertyName": "value" },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2500, 520],
+      "id": "fetch-csv-for-nav",
+      "name": "Fetch CSV (Nav)",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
     {
       "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
+        "jsCode": "function monthName(ym){ const [y,m]=ym.split('-').map(n=>+n); return new Date(y,m-1,1).toLocaleString('ru-RU',{month:'long',year:'numeric'}); }\nfunction buildCalendarGrid(ym){ const [y,m]=ym.split('-').map(n=>+n); const first=new Date(y,m-1,1); const dow=(first.getDay()+6)%7; // Mon=0\n const days=new Date(y,m,0).getDate(); const grid=[]; let week=new Array(7).fill(null); let day=1;\n for(let i=0;i<dow;i++) week[i]=null; for(let i=dow;i<7;i++){ week[i]=day++; } grid.push(week);\n while(day<=days){ week=new Array(7).fill(null); for(let i=0;i<7&&day<=days;i++){ week[i]=day++; } grid.push(week); }\n while(grid.length<6) grid.push(new Array(7).fill(null)); return grid; }\nfunction ymOf(dateStr){ return dateStr.slice(0,7); }\nlet available=[]; try{ const raw=$('Fetch CSV Meta (for calendar)').first().json.value; const obj=raw?JSON.parse(raw):{}; available=Array.isArray(obj.availableDates)?obj.availableDates:[]; }catch(e){ available=[]; }\nlet selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){ selected=[]; }\nconst ym=$json.cal_month; const grid=buildCalendarGrid(ym); const chat=$('Extract User Data').first().json.chat_id; const header=[{ text:'◀', callback_data:'calnav:prev' },{ text: monthName(ym).replace(/^./,c=>c.toUpperCase()), callback_data:'noop' },{ text:'▶', callback_data:'calnav:next' }];\nconst weekdays=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(w=>({text:w,callback_data:'noop'}));\nconst rows=[header,weekdays];\nfor(const w of grid){ const r=[]; for(let i=0;i<7;i++){ const d=w[i]; if(!d){ r.push({ text:' ', callback_data:'noop' }); continue; } const day=String(d).padStart(2,'0'); const full=`${ym}-${day}`; const isAvail=available.includes(full); const isSel=selected.includes(full);\n const label=(isSel?'☑ ':'')+day; r.push({ text: isAvail?label:'·', callback_data: isAvail?`date:${full}`:'noop' }); }\n rows.push(r); }\nconst controls=[]; if(selected.length>0){ controls.push({ text:'✅ Готово', callback_data:'dates:done' }); } else { controls.push({ text:'🔒 Готово', callback_data:'noop' }); } controls.push({ text:'🗑 Сброс', callback_data:'dates:reset' });\nrows.push(controls);\nconst selectedLine=selected.length?`Выбрано: ${selected.join(', ')}`:'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chat, text:`📅 Мультивыбор дат\\n\\n${selectedLine}`, reply_markup:{ inline_keyboard:rows } } }];"
       },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3840, 240],
+      "id": "render-calendar",
+      "name": "Render Calendar Grid"
+    },
+    {
+      "parameters": { "method": "POST", "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage", "sendBody": true, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json) }}" },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2960, 620],
-      "id": "send-multi-date-kb",
-      "name": "Send Multi-Date Keyboard"
+      "position": [4060, 240],
+      "id": "send-calendar",
+      "name": "Send Calendar"
     },
-
     {
       "parameters": {
-        "jsCode": "return [{ json:{ selectedDates:[], user_id:$('Extract User Data').first().json.user_id } }];"
+        "jsCode": "const dateStr=$('Extract User Data').first().json.callback_data.replace('date:',''); const uid=$('Extract User Data').first().json.user_id; let selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){ selected=[]; }\nconst MAX=3; if(selected.includes(dateStr)){ selected=selected.filter(d=>d!==dateStr); return [{ json:{ user_id:uid, selectedDates:selected, hitLimit:false } }]; }\nif(selected.length>=MAX){ return [{ json:{ user_id:uid, selectedDates:selected, hitLimit:true } }]; }\nselected.push(dateStr); return [{ json:{ user_id:uid, selectedDates:selected, hitLimit:false } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2080, 720],
-      "id": "reset-dates",
-      "name": "Reset Dates"
+      "position": [2720, 620],
+      "id": "toggle-date",
+      "name": "Toggle Date"
     },
-
+    {
+      "parameters": { "operation": "set", "key": "=ozon:cache:{{ $json.user_id }}:selected_dates", "value": "={{ JSON.stringify($json.selectedDates || []) }}", "options": { "ttl": 3600 } },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2940, 620],
+      "id": "persist-selected",
+      "name": "Persist Selected Dates",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
+    {
+      "parameters": { "operation": "get", "key": "=ozon:cache:{{ $json.user_id }}:csv_data", "propertyName": "value" },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [3160, 620],
+      "id": "fetch-csv-for-render",
+      "name": "Fetch CSV (Render)",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
     {
       "parameters": {
-        "jsCode": "const userId=$('Extract User Data').first().json.user_id; let selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){ selected=[]; }\nif(!selected.length){ return [{ json:{ needSelect:true } }]; }\nreturn [{ json:{ selectedDates:selected, user_id:userId, chat_id:$('Extract User Data').first().json.chat_id, startTime:'00:00', endTime:'23:59' } }];"
+        "operation": "get",
+        "key": "=ozon:cache:{{ $json.user_id }}:cal_month",
+        "propertyName": "value"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [3380, 620],
+      "id": "get-month-for-render",
+      "name": "Get Month (Render)",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "let m=$json.cal_month; if(!m){ m=$('Get Month (Render)').first().json.value || new Date().toISOString().slice(0,7); }\nreturn [{ json:{ cal_month:m } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2080, 820],
-      "id": "handle-dates-done",
-      "name": "Handle Done"
+      "position": [3600, 620],
+      "id": "ensure-month",
+      "name": "Ensure Month For Render"
     },
-
     {
       "parameters": {
         "method": "POST",
@@ -538,11 +359,37 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2300, 720],
-      "id": "answer-callback-limit",
+      "position": [2940, 720],
+      "id": "cb-limit",
       "name": "Answer Callback (limit)"
     },
-
+    {
+      "parameters": { "jsCode": "return [{ json:{ selectedDates:[], user_id:$('Extract User Data').first().json.user_id } }];" },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2060, 820],
+      "id": "reset-dates",
+      "name": "Reset Dates"
+    },
+    {
+      "parameters": { "operation": "set", "key": "=ozon:cache:{{ $json.user_id }}:selected_dates", "value": "={{ JSON.stringify($json.selectedDates || []) }}", "options": { "ttl": 3600 } },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2280, 820],
+      "id": "persist-reset",
+      "name": "Persist Selected (Reset)",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "const uid=$('Extract User Data').first().json.user_id; let selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){ selected=[]; } if(!selected.length) return [{ json:{ needSelect:true } }];\nreturn [{ json:{ selectedDates:selected, user_id:uid, chat_id:$('Extract User Data').first().json.chat_id, startTime:'00:00', endTime:'23:59' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2500, 820],
+      "id": "handle-done",
+      "name": "Handle Done"
+    },
     {
       "parameters": {
         "method": "POST",
@@ -553,75 +400,161 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2300, 820],
-      "id": "answer-callback-need-select",
+      "position": [2720, 820],
+      "id": "cb-need-select",
       "name": "Answer Callback (needSelect)"
+    },
+    {
+      "parameters": { "operation": "get", "key": "=ozon:cache:{{ $json.user_id }}:csv_data", "propertyName": "value" },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [2940, 820],
+      "id": "get-csv-for-stats",
+      "name": "Get Cached Data (for stats)",
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+    },
+    {
+      "parameters": {
+        "jsCode": "function parseAsMsk(s){ if(!s) return null; let d=s; if(/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(d)) d=d.replace(' ','T')+'Z'; const base=new Date(d); if(isNaN(base)) return null; return new Date(base.getTime()+3*60*60*1000); }\nfunction filter(records,datesOrOne,st,en){ const dates=Array.isArray(datesOrOne)?datesOrOne:[datesOrOne]; const set=new Set(dates.filter(Boolean)); return records.filter(r=>{ const dt=parseAsMsk(r.created_at); if(!dt) return false; const d=dt.toISOString().split('T')[0]; if(!set.has(d)) return false; const t=dt.toTimeString().slice(0,5); return t>=st && t<=en; }); }\nfunction calc(records,datesOrOne,st,en){ const arr=filter(records,datesOrOne,st,en); if(!arr.length) return { date:datesOrOne,startTime:st,endTime:en,totalOrders:0,totalCancellations:0,totalRevenue:0,skuStats:{},message:'Нет данных за указанный период' };\n const rev=['доставлен','доставляется','ожидает сборки','ожидает отгрузки']; const canc=['отменён','отменен','возврат']; const by={};\n for(const r of arr){ const sku=r.sku; const status=r.status||''; const q=r.quantity||1; const p=r.price||0; by[sku] ||= { totalOrders:0,cancellations:0,totalRevenue:0,weightedPriceSum:0,weightedQuantitySum:0,avgPrice:0 }; const s=by[sku]; s.totalOrders+=q; if(canc.some(x=>status.includes(x))) s.cancellations+=q; if(rev.some(x=>status.includes(x))){ s.totalRevenue+=p*q; s.weightedPriceSum+=p*q; s.weightedQuantitySum+=q; } }\n for(const k of Object.keys(by)){ const s=by[k]; if(s.weightedQuantitySum>0) s.avgPrice=s.weightedPriceSum/s.weightedQuantitySum; }\n let totO=0, totC=0, totR=0; for(const s of Object.values(by)){ totO+=s.totalOrders; totC+=s.cancellations; totR+=s.totalRevenue; }\n return { date:datesOrOne,startTime:st,endTime:en,totalOrders:totO,totalCancellations:totC,totalRevenue:totR,skuStats:by }; }\nfunction fmt(st){ let msg='📊 <b>Статистика заказов</b>\\n\\n'; const label=Array.isArray(st.date)?st.date.join(', '):st.date; msg+=`📅 Даты: ${label}\\n`; msg+=`⏰ Время: ${st.startTime} - ${st.endTime}\\n\\n`; if(st.totalOrders===0){ msg+=st.message||'Нет данных'; return msg; } const skus=Object.keys(st.skuStats).sort(); for(const sku of skus){ const s=st.skuStats[sku]; msg+=`<b>${sku}</b>\\n  • Заказов: ${s.totalOrders}\\n  • Отмен: ${s.cancellations}\\n  • Средняя цена: ${s.avgPrice.toFixed(2)} ₽\\n  • Сумма: ${s.totalRevenue.toFixed(2)} ₽\\n\\n`; } msg+=`<b>ИТОГО:</b>\\n  • Всего заказов: ${st.totalOrders}\\n  • Всего отмен: ${st.totalCancellations}\\n  • Общая сумма: ${st.totalRevenue.toFixed(2)} ₽`; return msg; }\n// inputs\nlet meta={}; try{ meta=JSON.parse($('Get Cached Data (for stats)').first().json.value||'{}'); }catch(e){ meta={}; }\nconst datesOrOne=$json.selectedDates && $json.selectedDates.length ? $json.selectedDates : (meta.availableDates||[])[0];\nconst st=$json.startTime||'00:00'; const en=$json.endTime||'23:59'; const stats=calc(meta.records||[], datesOrOne, st, en); const text=fmt(stats);\nreturn [{ json:{ chat_id:$('Extract User Data').first().json.chat_id, text, stats } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3160, 820],
+      "id": "calc-stats",
+      "name": "Calculate Statistics"
+    },
+    {
+      "parameters": { "chatId": "={{ $json.chat_id }}", "text": "={{ $json.text }}", "additionalFields": { "parse_mode": "HTML", "appendAttribution": false } },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [3380, 820],
+      "id": "send-stats",
+      "name": "Send Statistics",
+      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
+    },
+    {
+      "parameters": { "jsCode": "const i=$json; const kb=i.reply_markup?.inline_keyboard||[]; return [{ json:{ chat_id:i.chat_id, text:i.text, parse_mode:'HTML', reply_markup:{ inline_keyboard:kb } } }];" },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2300, 40],
+      "id": "prep-menu",
+      "name": "Prepare Menu"
+    },
+    {
+      "parameters": { "method": "POST", "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage", "sendBody": true, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json) }}" },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2520, 40],
+      "id": "send-menu",
+      "name": "Send Menu"
+    },
+    {
+      "parameters": { "jsCode": "const i=$json; const kb=i.reply_markup?.inline_keyboard||[]; return [{ json:{ chat_id:i.chat_id, text:i.text, parse_mode:'HTML', reply_markup:{ inline_keyboard:kb } } }];" },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2300, 160],
+      "id": "prep-menu-resp",
+      "name": "Prepare Menu Response"
+    },
+    {
+      "parameters": { "method": "POST", "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage", "sendBody": true, "specifyBody": "json", "jsonBody": "={{ JSON.stringify($json) }}" },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [2520, 160],
+      "id": "send-menu-resp",
+      "name": "Send Menu Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d=$('Extract User Data').first().json.document||{}; const name=(d.file_name||'').toLowerCase(); const mime=(d.mime_type||'').toLowerCase(); const isXlsx=mime==='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'||name.endsWith('.xlsx'); if(!d.file_id||!isXlsx) return []; return [{ json:$json }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2080, 300],
+      "id": "ensure-xlsx",
+      "name": "Ensure Document (XLSX)"
+    },
+    {
+      "parameters": { "resource": "file", "fileId": "={{ $('Extract User Data').first().json.document.file_id }}", "additionalFields": { "download": true } },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [2300, 300],
+      "id": "dl-xlsx",
+      "name": "Get XLSX from Telegram",
+      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
+    },
+    {
+      "parameters": { "operation": "xlsx" },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [2520, 300],
+      "id": "extract-xlsx",
+      "name": "Extract from File (XLSX)"
     }
   ],
   "connections": {
-    "Telegram Trigger": { "main": [[{ "node": "Config", "type": "main", "index": 0 }]] },
-    "Config": { "main": [[{ "node": "Validate Config", "type": "main", "index": 0 }]] },
-    "Validate Config": { "main": [[{ "node": "Extract User Data", "type": "main", "index": 0 }]] },
-    "Extract User Data": { "main": [[{ "node": "Check Whitelist", "type": "main", "index": 0 }]] },
-    "Check Whitelist": { "main": [[{ "node": "Validate Whitelist", "type": "main", "index": 0 }]] },
-    "Validate Whitelist": { "main": [[{ "node": "Is Authorized?", "type": "main", "index": 0 }]] },
-    "Is Authorized?": {
+    "telegram-trigger": { "main": [[{ "node": "config", "type": "main", "index": 0 }]] },
+    "config": { "main": [[{ "node": "validate-config", "type": "main", "index": 0 }]] },
+    "validate-config": { "main": [[{ "node": "extract-user", "type": "main", "index": 0 }]] },
+    "extract-user": { "main": [[{ "node": "check-whitelist", "type": "main", "index": 0 }]] },
+    "check-whitelist": { "main": [[{ "node": "validate-whitelist", "type": "main", "index": 0 }]] },
+    "validate-whitelist": { "main": [[{ "node": "is-authorized", "type": "main", "index": 0 }]] },
+    "is-authorized": {
       "main": [
-        [{ "node": "Check Admin", "type": "main", "index": 0 }],
-        [{ "node": "Unauthorized Response", "type": "main", "index": 0 }]
+        [{ "node": "check-admin", "type": "main", "index": 0 }],
+        [{ "node": "unauth", "type": "main", "index": 0 }]
       ]
     },
-    "Check Admin": { "main": [[{ "node": "Route Message", "type": "main", "index": 0 }]] },
-
-    "Route Message": {
+    "check-admin": { "main": [[{ "node": "route", "type": "main", "index": 0 }]] },
+    "route": {
       "main": [
-        [{ "node": "Generate Main Menu", "type": "main", "index": 0 }],
-        [{ "node": "Ensure Document", "type": "main", "index": 0 }],
-        [{ "node": "Handle Menu", "type": "main", "index": 0 }],
-        [{ "node": "Get Selected Dates", "type": "main", "index": 0 }],
-        [{ "node": "Ensure XLSX Document", "type": "main", "index": 0 }],
-        [{ "node": "handle-dates-done", "type": "main", "index": 0 }],
-        [{ "node": "Reset Dates", "type": "main", "index": 0 }]
+        [{ "node": "gen-menu", "type": "main", "index": 0 }],
+        [{ "node": "ensure-csv", "type": "main", "index": 0 }],
+        [{ "node": "handle-menu", "type": "main", "index": 0 }],
+        [{ "node": "get-month", "type": "main", "index": 0 }],
+        [{ "node": "ensure-xlsx", "type": "main", "index": 0 }],
+        [{ "node": "reset-dates", "type": "main", "index": 0 }],
+        [{ "node": "handle-done", "type": "main", "index": 0 }],
+        [{ "node": "get-selected", "type": "main", "index": 0 }]
       ]
     },
-
-    "Generate Main Menu": { "main": [[{ "node": "Prepare Menu", "type": "main", "index": 0 }]] },
-    "Prepare Menu": { "main": [[{ "node": "Send Menu", "type": "main", "index": 0 }]] },
-
-    "Handle Menu": { "main": [[{ "node": "Prepare Menu Response", "type": "main", "index": 0 }]] },
-    "Prepare Menu Response": { "main": [[{ "node": "Send Menu Response", "type": "main", "index": 0 }]] },
-
-    "Ensure Document": { "main": [[{ "node": "Get File from Telegram", "type": "main", "index": 0 }]] },
-    "Get File from Telegram": { "main": [[{ "node": "Extract from File", "type": "main", "index": 0 }]] },
-    "Extract from File": { "main": [[{ "node": "Parse Report File", "type": "main", "index": 0 }]] },
-    "Parse Report File": { "main": [[{ "node": "Cache to Redis", "type": "main", "index": 0 }]] },
-    "Cache to Redis": { "main": [[{ "node": "Generate Date Keyboard", "type": "main", "index": 0 }]] },
-    "Generate Date Keyboard": { "main": [[{ "node": "Prepare Date Selection", "type": "main", "index": 0 }]] },
-    "Prepare Date Selection": { "main": [[{ "node": "Send Date Selection", "type": "main", "index": 0 }]] },
-
-    "Ensure XLSX Document": { "main": [[{ "node": "Get XLSX from Telegram", "type": "main", "index": 0 }]] },
-    "Get XLSX from Telegram": { "main": [[{ "node": "Extract from File (XLSX)", "type": "main", "index": 0 }]] },
-    "Extract from File (XLSX)": { "main": [[{ "node": "Parse Report File", "type": "main", "index": 0 }]] },
-
-    "Get Selected Dates": { "main": [[{ "node": "Toggle Date", "type": "main", "index": 0 }]] },
-    "Toggle Date": { "main": [[{ "node": "Persist Selected Dates", "type": "main", "index": 0 }]] },
-    "Persist Selected Dates": { "main": [[{ "node": "Fetch Cached CSV Meta", "type": "main", "index": 0 }]] },
-    "Fetch Cached CSV Meta": { "main": [[{ "node": "Render Multi-Date Keyboard", "type": "main", "index": 0 }]] },
-    "Render Multi-Date Keyboard": { "main": [[{ "node": "Send Multi-Date Keyboard", "type": "main", "index": 0 }]] },
-
-    "Reset Dates": { "main": [[{ "node": "Persist Selected Dates", "type": "main", "index": 0 }]] },
-
-    "Handle Date Callback": { "main": [[{ "node": "Get Cached Data", "type": "main", "index": 0 }]] },
-    "Get Cached Data": { "main": [[{ "node": "Merge Selection with Data", "type": "main", "index": 0 }]] },
-    "Merge Selection with Data": { "main": [[{ "node": "Calculate Statistics", "type": "main", "index": 0 }]] },
-    "Calculate Statistics": { "main": [[{ "node": "Send Statistics", "type": "main", "index": 0 }]] },
-
-    "handle-dates-done": { "main": [[{ "node": "Get Cached Data", "type": "main", "index": 0 }]] }
+    "gen-menu": { "main": [[{ "node": "prep-menu", "type": "main", "index": 0 }]] },
+    "prep-menu": { "main": [[{ "node": "send-menu", "type": "main", "index": 0 }]] },
+    "handle-menu": { "main": [[{ "node": "prep-menu-resp", "type": "main", "index": 0 }]] },
+    "prep-menu-resp": { "main": [[{ "node": "send-menu-resp", "type": "main", "index": 0 }]] },
+    "ensure-csv": { "main": [[{ "node": "dl-csv", "type": "main", "index": 0 }]] },
+    "dl-csv": { "main": [[{ "node": "extract-csv", "type": "main", "index": 0 }]] },
+    "extract-csv": { "main": [[{ "node": "parse-report", "type": "main", "index": 0 }]] },
+    "parse-report": { "main": [[{ "node": "cache-csv", "type": "main", "index": 0 }]] },
+    "cache-csv": { "main": [[{ "node": "calc-initial-month", "type": "main", "index": 0 }]] },
+    "calc-initial-month": { "main": [[{ "node": "persist-month", "type": "main", "index": 0 }]] },
+    "persist-month": { "main": [[{ "node": "refetch-csv-for-cal", "type": "main", "index": 0 }]] },
+    "refetch-csv-for-cal": { "main": [[{ "node": "get-selected", "type": "main", "index": 0 }]] },
+    "get-selected": { "main": [[{ "node": "render-calendar", "type": "main", "index": 0 }]] },
+    "render-calendar": { "main": [[{ "node": "send-calendar", "type": "main", "index": 0 }]] },
+    "ensure-xlsx": { "main": [[{ "node": "dl-xlsx", "type": "main", "index": 0 }]] },
+    "dl-xlsx": { "main": [[{ "node": "extract-xlsx", "type": "main", "index": 0 }]] },
+    "extract-xlsx": { "main": [[{ "node": "parse-report", "type": "main", "index": 0 }]] },
+    "get-month": { "main": [[{ "node": "handle-calnav", "type": "main", "index": 0 }]] },
+    "handle-calnav": { "main": [[{ "node": "persist-month-on-nav", "type": "main", "index": 0 }]] },
+    "persist-month-on-nav": { "main": [[{ "node": "fetch-csv-for-nav", "type": "main", "index": 0 }]] },
+    "fetch-csv-for-nav": { "main": [[{ "node": "get-selected", "type": "main", "index": 0 }]] },
+    "toggle-date": { "main": [[{ "node": "persist-selected", "type": "main", "index": 0 }]] },
+    "persist-selected": { "main": [[{ "node": "fetch-csv-for-render", "type": "main", "index": 0 }]] },
+    "fetch-csv-for-render": { "main": [[{ "node": "get-month-for-render", "type": "main", "index": 0 }]] },
+    "get-month-for-render": { "main": [[{ "node": "ensure-month", "type": "main", "index": 0 }]] },
+    "ensure-month": { "main": [[{ "node": "render-calendar", "type": "main", "index": 0 }]] },
+    "cb-limit": { "main": [] },
+    "reset-dates": { "main": [[{ "node": "persist-reset", "type": "main", "index": 0 }]] },
+    "persist-reset": { "main": [[{ "node": "refetch-csv-for-cal", "type": "main", "index": 0 }]] },
+    "handle-done": { "main": [[{ "node": "cb-need-select", "type": "main", "index": 0 }, { "node": "get-csv-for-stats", "type": "main", "index": 0 }]] },
+    "get-csv-for-stats": { "main": [[{ "node": "calc-stats", "type": "main", "index": 0 }]] },
+    "calc-stats": { "main": [[{ "node": "send-stats", "type": "main", "index": 0 }]] }
   },
   "pinData": {},
   "active": false,
   "settings": { "executionOrder": "v1" },
-  "versionId": "1-patched-layout-aligned",
+  "versionId": "2-calendar-grid",
   "meta": { "instanceId": "ozon-bot-instance" },
   "tags": []
 }
