@@ -756,6 +756,19 @@
       ],
       "id": "extract-from-file-xlsx",
       "name": "Extract from File (XLSX)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const doc = $('Extract User Data').first().json.document;\nif (!doc?.file_id) {\n  throw new Error('No document attached. Please send a CSV/XLSX file.');\n}\nreturn [{ json: $json }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        240
+      ],
+      "id": "ensure-document",
+      "name": "Ensure Document"
     }
   ],
   "connections": {
@@ -832,7 +845,7 @@
         ],
         [
           {
-            "node": "Get File from Telegram",
+            "node": "Ensure Document",
             "type": "main",
             "index": 0
           }
@@ -853,7 +866,7 @@
         ],
         [
           {
-            "node": "Get File from Telegram",
+            "node": "Ensure Document",
             "type": "main",
             "index": 0
           }
@@ -1070,6 +1083,17 @@
         [
           {
             "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure Document": {
+      "main": [
+        [
+          {
+            "node": "Get File from Telegram",
             "type": "main",
             "index": 0
           }
