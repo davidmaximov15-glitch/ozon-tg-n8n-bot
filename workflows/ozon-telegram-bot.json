@@ -341,17 +341,9 @@
                       "type": "string",
                       "operation": "startsWith"
                     }
-                  },
-                  {
-                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
-                    "rightValue": "calnav:",
-                    "operator": {
-                      "type": "string",
-                      "operation": "startsWith"
-                    }
                   }
                 ],
-                "combinator": "or"
+                "combinator": "and"
               }
             },
             {
@@ -471,27 +463,6 @@
                   {
                     "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
                     "rightValue": "file:upload",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              }
-            },
-            {
-              "outputKey": "FileClear",
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
-                    "rightValue": "file:clear",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
@@ -749,7 +720,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const month=$('Calc Initial Month').first().json.month; const chatId=$('Calc Initial Month').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV Meta (for calendar)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\nlet selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){}\n// Build month grid\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[];\n// header weekdays\n// start pad from Mon\nlet startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){\n  const ds=`${month}-${String(d).padStart(2,'0')}`;\n  const isAvail=avail.has(ds); const isSel=selected.includes(ds);\n  const label=(isSel?'☑ ':'▫ ')+String(d);\n  row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' });\n  if(row.length===7){ rows.push(row); row=[]; }\n}\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[\n  { text:'◀', callback_data:`calnav:prev:${month}` },\n  { text:`${month}`, callback_data:'noop' },\n  { text:'▶', callback_data:`calnav:next:${month}` }\n];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово', callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово', callback_data:'noop'}); ctrl.push({text:'🗑 Сброс', callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ] };\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
+        "jsCode": "const month=$('Calc Initial Month').first().json.month; const chatId=$('Calc Initial Month').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV Meta (for calendar)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\nlet selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){}\n// Build month grid\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[];\n// header weekdays\n// start pad from Mon\nlet startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){\n  const ds=`${month}-${String(d).padStart(2,'0')}`;\n  const isAvail=avail.has(ds); const isSel=selected.includes(ds);\n  const label=(isSel?'☑ ':'▫ ')+String(d);\n  row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' });\n  if(row.length===7){ rows.push(row); row=[]; }\n}\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[\n  { text:'◀', callback_data:`cal:${month}:prev` },\n  { text:`${month}`, callback_data:'noop' },\n  { text:'▶', callback_data:`cal:${month}:next` }\n];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово', callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово', callback_data:'noop'}); ctrl.push({text:'🗑 Сброс', callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ] };\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -779,7 +750,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const cb=$('Extract User Data').first().json.callback_data; const cmd=cb.startsWith('calnav:')?cb.split(':')[1]:''; const cur=cb.split(':')[2]||new Date().toISOString().slice(0,7);\nfunction shiftMonth(ym,dir){ const [y,m]=ym.split('-').map(Number); const d=new Date(Date.UTC(y,m-1+dir,1)); return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`; }\nconst next = cmd==='prev'? shiftMonth(cur,-1) : cmd==='next'? shiftMonth(cur,1) : cur;\nreturn [{ json:{ month:next, chat_id:$('Extract User Data').first().json.chat_id, user_id:$('Extract User Data').first().json.user_id } }];"
+        "jsCode": "// input: callback_data = \"cal:YYYY-MM:prev\" | \"cal:YYYY-MM:next\"\nconst cb = $('Extract User Data').first().json.callback_data || '';\nconst [, ym, dir] = cb.split(':'); // [\"cal\",\"YYYY-MM\",\"prev|next\"]\n\nfunction shiftMonth(ymStr, step) {\n  const [y, m] = ymStr.split('-').map(Number);\n  const d = new Date(Date.UTC(y, (m - 1) + step, 1));\n  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;\n}\n\n// навигация\nconst nextMonth = dir === 'prev' ? shiftMonth(ym, -1)\n                 : dir === 'next' ? shiftMonth(ym,  1)\n                 : ym;\n\n// отдаём дальше месяц и контекст\nreturn [{\n  json: {\n    month: nextMonth,\n    chat_id: $('Extract User Data').first().json.chat_id,\n    user_id: $('Extract User Data').first().json.user_id\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -847,7 +818,7 @@
     },
     {
       "parameters": {
-        "jsCode": "let selected=[]; try{ const raw=$('Get Month (Render)').first().json.value; selected = raw?JSON.parse(raw):[]; }catch(e){}\nconst month=$('Ensure Month For Render').first().json.month; const chatId=$('Extract User Data').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV (Render)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\n// reuse same renderer as before (copied)\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[]; let startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){ const ds=`${month}-${String(d).padStart(2,'0')}`; const isAvail=avail.has(ds); const isSel=selected.includes(ds); const label=(isSel?'☑ ':'▫ ')+String(d); row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' }); if(row.length===7){ rows.push(row); row=[]; } }\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[{text:'◀',callback_data:`calnav:prev:${month}`},{text:`${month}`,callback_data:'noop'},{text:'▶',callback_data:`calnav:next:${month}`}];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово',callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово',callback_data:'noop'}); ctrl.push({text:'🗑 Сброс',callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ]};\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
+        "jsCode": "let selected=[]; try{ const raw=$('Get Month (Render)').first().json.value; selected = raw?JSON.parse(raw):[]; }catch(e){}\nconst month=$('Ensure Month For Render').first().json.month; const chatId=$('Extract User Data').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV (Render)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\n// reuse same renderer as before (copied)\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[]; let startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){ const ds=`${month}-${String(d).padStart(2,'0')}`; const isAvail=avail.has(ds); const isSel=selected.includes(ds); const label=(isSel?'☑ ':'▫ ')+String(d); row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' }); if(row.length===7){ rows.push(row); row=[]; } }\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[{text:'◀',callback_data:`cal:${month}:prev`},{text:`${month}`,callback_data:'noop'},{text:'▶',callback_data:`cal:${month}:next`}];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово',callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово',callback_data:'noop'}); ctrl.push({text:'🗑 Сброс',callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ]};\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1007,7 +978,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// reuse renderer with current month + selected from Redis\nlet selected=[]; try{ const raw=$('Persist Selected Dates').first().json.value; }catch(e){}\ntry{ const raw=$('Get Selected Dates (toggle)').first().json.value; selected = raw?JSON.parse(raw):[]; }catch(e){}\ntry{ if($json.selectedDates) selected=$json.selectedDates; }catch(e){}\nconst month=$('Pick Month For Re-render').first().json.month; const chatId=$('Toggle Date').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV (Render again)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[]; let startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){ const ds=`${month}-${String(d).padStart(2,'0')}`; const isAvail=avail.has(ds); const isSel=selected.includes(ds); const label=(isSel?'☑ ':'▫ ')+String(d); row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' }); if(row.length===7){ rows.push(row); row=[]; } }\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[{text:'◀',callback_data:`calnav:prev:${month}`},{text:`${month}`,callback_data:'noop'},{text:'▶',callback_data:`calnav:next:${month}`}];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово',callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово',callback_data:'noop'}); ctrl.push({text:'🗑 Сброс',callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ]};\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
+        "jsCode": "// reuse renderer with current month + selected from Redis\nlet selected=[]; try{ const raw=$('Persist Selected Dates').first().json.value; }catch(e){}\ntry{ const raw=$('Get Selected Dates (toggle)').first().json.value; selected = raw?JSON.parse(raw):[]; }catch(e){}\ntry{ if($json.selectedDates) selected=$json.selectedDates; }catch(e){}\nconst month=$('Pick Month For Re-render').first().json.month; const chatId=$('Toggle Date').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV (Render again)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[]; let startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){ const ds=`${month}-${String(d).padStart(2,'0')}`; const isAvail=avail.has(ds); const isSel=selected.includes(ds); const label=(isSel?'☑ ':'▫ ')+String(d); row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' }); if(row.length===7){ rows.push(row); row=[]; } }\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[{text:'◀',callback_data:`cal:${month}:prev`},{text:`${month}`,callback_data:'noop'},{text:'▶',callback_data:`cal:${month}:next`}];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово',callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово',callback_data:'noop'}); ctrl.push({text:'🗑 Сброс',callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ]};\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
