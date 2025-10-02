@@ -532,10 +532,27 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId=$('Extract User Data').first().json.chat_id; const cb=$('Extract User Data').first().json.callback_data; const isAdmin=$('Check Admin').first().json.value==='1';\nconst action=cb.replace('menu:',''); let text=''; let kb={ inline_keyboard:[[ {text:'« Назад',callback_data:'/start'} ]] };\nif(action==='orders'){ text='📦 <b>Раздел: Заказы</b>\\n\\nОтправьте отчёт .csv/.xlsx (до 20MB)'; }\nelse if(action==='clusters'){ text='🎯 <b>Раздел: Кластеры</b>\\n\\n🚧 В разработке.'; }\nelse if(action==='admin'&&isAdmin){ text='⚙️ <b>Админка</b>\\n\\nУправление доступом:'; kb={ inline_keyboard:[[ {text:'👥 Пользователи',callback_data:'admin:users'} ],[ {text:'« Назад',callback_data:'/start'} ]]}; }\nreturn [{ json:{ chat_id:chatId, text, reply_markup:kb } }];"
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+              "rightValue": "menu:orders",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
         2080,
         160
