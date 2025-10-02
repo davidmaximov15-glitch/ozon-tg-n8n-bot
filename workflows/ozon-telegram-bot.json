@@ -3,29 +3,55 @@
   "nodes": [
     {
       "parameters": {
-        "updates": ["message", "callback_query"],
-        "additionalFields": { "download": true }
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {
+          "download": true
+        }
       },
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
-      "position": [100, 100],
+      "position": [
+        100,
+        100
+      ],
       "id": "n-tt",
       "name": "Telegram Trigger",
-      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            { "id": "telegram-bot-token-field", "name": "TELEGRAM_BOT_TOKEN", "value": "YOUR_TELEGRAM_BOT_TOKEN_HERE", "type": "string" },
-            { "id": "superuser-ids-field", "name": "SUPERUSER_IDS", "value": "user_id_1,user_id_2", "type": "string" }
+            {
+              "id": "telegram-bot-token-field",
+              "name": "TELEGRAM_BOT_TOKEN",
+              "value": "YOUR_TELEGRAM_BOT_TOKEN_HERE",
+              "type": "string"
+            },
+            {
+              "id": "superuser-ids-field",
+              "name": "SUPERUSER_IDS",
+              "value": "user_id_1,user_id_2",
+              "type": "string"
+            }
           ]
         },
         "includeOtherFields": true
       },
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [320, 100],
+      "position": [
+        320,
+        100
+      ],
       "id": "n-cfg",
       "name": "Config"
     },
@@ -35,7 +61,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [540, 100],
+      "position": [
+        540,
+        100
+      ],
       "id": "n-valcfg",
       "name": "Validate Config"
     },
@@ -45,18 +74,33 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [760, 100],
+      "position": [
+        760,
+        100
+      ],
       "id": "n-extract",
       "name": "Extract User Data"
     },
     {
-      "parameters": { "operation": "get", "key": "=ozon:acl:whitelist:{{ $json.user_id }}", "propertyName": "value" },
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:acl:whitelist:{{ $json.user_id }}",
+        "propertyName": "value"
+      },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [980, 100],
+      "position": [
+        980,
+        100
+      ],
       "id": "n-redis-wl",
       "name": "Check Whitelist",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -64,23 +108,42 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1200, 100],
+      "position": [
+        1200,
+        100
+      ],
       "id": "n-valwl",
       "name": "Validate Whitelist"
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 },
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
           "conditions": [
-            { "id": "ok", "leftValue": "={{ $json.is_superuser === true || $json.is_admin === true }}", "rightValue": "true", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }
+            {
+              "id": "ok",
+              "leftValue": "={{ $json.is_superuser === true || $json.is_admin === true }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
           ],
           "combinator": "and"
         }
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [1420, 100],
+      "position": [
+        1420,
+        100
+      ],
       "id": "n-isauth",
       "name": "Is Authorized?"
     },
@@ -88,54 +151,284 @@
       "parameters": {
         "chatId": "={{ $('Extract User Data').first().json.chat_id }}",
         "text": "⛔ <b>Доступ запрещен</b>.\n\nОбратитесь к администратору.",
-        "additionalFields": { "appendAttribution": false, "parse_mode": "HTML" }
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [1420, 260],
+      "position": [
+        1420,
+        260
+      ],
       "id": "n-unauth",
       "name": "Unauthorized Response",
-      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
-      "parameters": { "operation": "get", "key": "=ozon:acl:admins:{{ $('Extract User Data').first().json.user_id }}", "propertyName": "value" },
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:acl:admins:{{ $('Extract User Data').first().json.user_id }}",
+        "propertyName": "value"
+      },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [1640, 100],
+      "position": [
+        1640,
+        100
+      ],
       "id": "n-admin",
       "name": "Check Admin",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
         "rules": {
           "values": [
-            { "outputKey": "Start", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.message_text }}", "rightValue": "/start", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
-            { "outputKey": "CSV", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [
-              { "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}", "rightValue": "text/csv", "operator": { "type": "string", "operation": "equals" } },
-              { "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}", "rightValue": "application/vnd.ms-excel", "operator": { "type": "string", "operation": "equals" } },
-              { "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}", "rightValue": ".csv", "operator": { "type": "string", "operation": "endsWith" } }
-            ], "combinator": "or" } },
-            { "outputKey": "XLSX", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [
-              { "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}", "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "operator": { "type": "string", "operation": "equals" } },
-              { "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}", "rightValue": ".xlsx", "operator": { "type": "string", "operation": "endsWith" } }
-            ], "combinator": "or" } },
-            { "outputKey": "Menu", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "menu:", "operator": { "type": "string", "operation": "startsWith" } }], "combinator": "and" } },
-            { "outputKey": "DateSelection", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "date:", "operator": { "type": "string", "operation": "startsWith" } }], "combinator": "and" } },
-            { "outputKey": "CalNav", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [
-              { "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "cal:", "operator": { "type": "string", "operation": "startsWith" } },
-              { "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "calnav:", "operator": { "type": "string", "operation": "startsWith" } }
-            ], "combinator": "or" } },
-            { "outputKey": "DatesDone", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "dates:done", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
-            { "outputKey": "DatesReset", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "dates:reset", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } },
-            { "outputKey": "Noop", "conditions": { "options": { "caseSensitive": true, "typeValidation": "strict", "version": 2 }, "conditions": [{ "leftValue": "={{ $('Extract User Data').first().json.callback_data }}", "rightValue": "noop", "operator": { "type": "string", "operation": "equals" } }], "combinator": "and" } }
+            {
+              "outputKey": "Start",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.message_text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "CSV",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "text/csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.ms-excel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
+            },
+            {
+              "outputKey": "XLSX",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".xlsx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
+            },
+            {
+              "outputKey": "Menu",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "menu:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "DateSelection",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "date:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "CalNav",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "cal:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "calnav:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
+            },
+            {
+              "outputKey": "DatesDone",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "dates:done",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "DatesReset",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "dates:reset",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "Noop",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "noop",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
           ]
         },
-        "options": { "fallbackOutput": "none" }
+        "options": {
+          "fallbackOutput": "none"
+        }
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [1860, 100],
+      "position": [
+        1860,
+        100
+      ],
       "id": "n-route",
       "name": "Route Message"
     },
@@ -145,7 +438,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2080, 40],
+      "position": [
+        2080,
+        40
+      ],
       "id": "n-genmenu",
       "name": "Generate Main Menu"
     },
@@ -155,7 +451,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2240, 40],
+      "position": [
+        2240,
+        40
+      ],
       "id": "n-prep-menu",
       "name": "Prepare Menu"
     },
@@ -169,7 +468,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2440, 40],
+      "position": [
+        2440,
+        40
+      ],
       "id": "n-sendmenu",
       "name": "Send Menu"
     },
@@ -179,7 +481,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2080, 160],
+      "position": [
+        2080,
+        160
+      ],
       "id": "n-handlemenu",
       "name": "Handle Menu"
     },
@@ -189,7 +494,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2240, 160],
+      "position": [
+        2240,
+        160
+      ],
       "id": "n-prep-menuresp",
       "name": "Prepare Menu Response"
     },
@@ -203,7 +511,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2440, 160],
+      "position": [
+        2440,
+        160
+      ],
       "id": "n-send-menuresp",
       "name": "Send Menu Response"
     },
@@ -213,24 +524,50 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2060, 240],
+      "position": [
+        2060,
+        240
+      ],
       "id": "n-ensure-csv",
       "name": "Ensure CSV Document"
     },
     {
-      "parameters": { "resource": "file", "fileId": "={{ $('Extract User Data').first().json.document.file_id }}", "additionalFields": { "download": true } },
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Extract User Data').first().json.document.file_id }}",
+        "additionalFields": {
+          "download": true
+        }
+      },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [2240, 240],
+      "position": [
+        2240,
+        240
+      ],
       "id": "n-getfile-csv",
       "name": "Get File from Telegram",
-      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
-      "parameters": { "operation": "csv", "options": { "delimiter": ";", "relaxQuotes": true } },
+      "parameters": {
+        "operation": "csv",
+        "options": {
+          "delimiter": ";",
+          "relaxQuotes": true
+        }
+      },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
-      "position": [2440, 240],
+      "position": [
+        2440,
+        240
+      ],
       "id": "n-extract-csv",
       "name": "Extract from File (CSV)"
     },
@@ -240,7 +577,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2660, 240],
+      "position": [
+        2660,
+        240
+      ],
       "id": "n-parse",
       "name": "Parse Report File"
     },
@@ -249,14 +589,24 @@
         "operation": "set",
         "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
         "value": "={{ JSON.stringify({ reportType: $json.reportType, records: $json.records, availableDates: $json.availableDates, totalRecords: $json.totalRecords }) }}",
-        "options": { "ttl": 3600 }
+        "options": {
+          "ttl": 3600
+        }
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2860, 240],
+      "position": [
+        2860,
+        240
+      ],
       "id": "n-cachecsv",
       "name": "Cache CSV Meta",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -264,7 +614,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3060, 240],
+      "position": [
+        3060,
+        240
+      ],
       "id": "n-calc-month",
       "name": "Calc Initial Month"
     },
@@ -276,10 +629,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [3260, 240],
+      "position": [
+        3260,
+        240
+      ],
       "id": "n-fetch-csv",
       "name": "Fetch CSV Meta (for calendar)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -289,10 +650,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [3260, 320],
+      "position": [
+        3260,
+        320
+      ],
       "id": "n-get-selected",
       "name": "Get Selected Dates",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -300,7 +669,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3460, 240],
+      "position": [
+        3460,
+        240
+      ],
       "id": "n-render-cal",
       "name": "Render Calendar Grid"
     },
@@ -314,7 +686,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [3660, 240],
+      "position": [
+        3500,
+        260
+      ],
       "id": "n-send-cal",
       "name": "Send Calendar"
     },
@@ -324,7 +699,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2080, 320],
+      "position": [
+        2080,
+        320
+      ],
       "id": "n-handle-calnav",
       "name": "Handle Calendar Nav"
     },
@@ -336,10 +714,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2260, 320],
+      "position": [
+        2260,
+        320
+      ],
       "id": "n-fetch-csv-render",
       "name": "Fetch CSV (Render)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -349,10 +735,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2260, 400],
+      "position": [
+        2260,
+        400
+      ],
       "id": "n-get-month-selected",
       "name": "Get Month (Render)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -360,7 +754,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2080, 400],
+      "position": [
+        2080,
+        400
+      ],
       "id": "n-ensure-month",
       "name": "Ensure Month For Render"
     },
@@ -370,7 +767,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2460, 360],
+      "position": [
+        2460,
+        360
+      ],
       "id": "n-render-month",
       "name": "Render Calendar (rebuild)"
     },
@@ -384,7 +784,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2660, 360],
+      "position": [
+        2660,
+        360
+      ],
       "id": "n-send-cal-2",
       "name": "Send Calendar (rebuild)"
     },
@@ -396,10 +799,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2080, 520],
+      "position": [
+        2080,
+        520
+      ],
       "id": "n-get-sel",
       "name": "Get Selected Dates (toggle)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -407,7 +818,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2260, 520],
+      "position": [
+        2260,
+        520
+      ],
       "id": "n-toggle",
       "name": "Toggle Date"
     },
@@ -416,14 +830,24 @@
         "operation": "set",
         "key": "=ozon:cache:{{ $json.user_id }}:selected_dates",
         "value": "={{ JSON.stringify($json.selectedDates || []) }}",
-        "options": { "ttl": 3600 }
+        "options": {
+          "ttl": 3600
+        }
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2460, 520],
+      "position": [
+        2460,
+        520
+      ],
       "id": "n-persist-sel",
       "name": "Persist Selected Dates",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -435,7 +859,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2460, 600],
+      "position": [
+        2460,
+        600
+      ],
       "id": "n-ans-limit",
       "name": "Answer Callback (limit)"
     },
@@ -447,10 +874,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2660, 520],
+      "position": [
+        2660,
+        520
+      ],
       "id": "n-fetch-csv-forgrid",
       "name": "Fetch Cached Data (for grid)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -458,7 +893,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2860, 520],
+      "position": [
+        2860,
+        520
+      ],
       "id": "n-pick-month",
       "name": "Pick Month For Re-render"
     },
@@ -470,10 +908,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [3060, 520],
+      "position": [
+        3060,
+        520
+      ],
       "id": "n-fetch-csv-rerender",
       "name": "Fetch CSV (Render again)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -481,7 +927,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3260, 520],
+      "position": [
+        3260,
+        520
+      ],
       "id": "n-render-grid",
       "name": "Render Calendar Grid (rerender)"
     },
@@ -495,7 +944,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [3460, 520],
+      "position": [
+        3500,
+        560
+      ],
       "id": "n-send-grid",
       "name": "Send Calendar Grid"
     },
@@ -505,7 +957,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2080, 600],
+      "position": [
+        2080,
+        600
+      ],
       "id": "n-reset",
       "name": "Reset Dates"
     },
@@ -514,14 +969,24 @@
         "operation": "set",
         "key": "=ozon:cache:{{ $json.user_id }}:selected_dates",
         "value": "={{ JSON.stringify($json.selectedDates || []) }}",
-        "options": { "ttl": 3600 }
+        "options": {
+          "ttl": 3600
+        }
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2260, 600],
+      "position": [
+        2260,
+        600
+      ],
       "id": "n-persist-reset",
       "name": "Persist Selected (Reset)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -533,7 +998,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2260, 760],
+      "position": [
+        2260,
+        760
+      ],
       "id": "n-ans-need",
       "name": "Answer Callback (needSelect)"
     },
@@ -545,10 +1013,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2080, 720],
+      "position": [
+        2080,
+        720
+      ],
       "id": "n-getdone",
       "name": "Get Selected Dates (Done)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -556,7 +1032,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2260, 720],
+      "position": [
+        2260,
+        720
+      ],
       "id": "n-handledone",
       "name": "Handle Done"
     },
@@ -568,10 +1047,18 @@
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
-      "position": [2460, 720],
+      "position": [
+        2460,
+        720
+      ],
       "id": "n-getcsv-forstats",
       "name": "Get Cached Data (for stats)",
-      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } }
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     },
     {
       "parameters": {
@@ -579,7 +1066,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2660, 720],
+      "position": [
+        2660,
+        720
+      ],
       "id": "n-calc-stats",
       "name": "Calculate Statistics"
     },
@@ -587,14 +1077,25 @@
       "parameters": {
         "chatId": "={{ $json.chat_id }}",
         "text": "={{ $json.text }}",
-        "additionalFields": { "parse_mode": "HTML", "appendAttribution": false }
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "appendAttribution": false
+        }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [2860, 720],
+      "position": [
+        2860,
+        720
+      ],
       "id": "n-send-stats",
       "name": "Send Statistics",
-      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
       "parameters": {
@@ -602,114 +1103,948 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2060, 300],
+      "position": [
+        2060,
+        300
+      ],
       "id": "n-ensure-xlsx",
       "name": "Ensure XLSX Document"
     },
     {
-      "parameters": { "resource": "file", "fileId": "={{ $('Extract User Data').first().json.document.file_id }}", "additionalFields": { "download": true } },
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Extract User Data').first().json.document.file_id }}",
+        "additionalFields": {
+          "download": true
+        }
+      },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
-      "position": [2240, 300],
+      "position": [
+        2240,
+        300
+      ],
       "id": "n-getfile-xlsx",
       "name": "Get XLSX from Telegram",
-      "credentials": { "telegramApi": { "id": "p4dTUZho7h1VsmzM", "name": "Tg Ozon.Orders bot" } }
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     },
     {
-      "parameters": { "operation": "xlsx", "options": {} },
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
-      "position": [2440, 300],
+      "position": [
+        2440,
+        300
+      ],
       "id": "n-extract-xlsx",
       "name": "Extract from File (XLSX)"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:ui:{{ $('Extract User Data').first().json.user_id }}:calendar_msg_id",
+        "propertyName": "value"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2900,
+        520
+      ],
+      "id": "get-calendar-msg-id",
+      "name": "Get Calendar Msg ID",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-msg",
+              "leftValue": "={{ $json.value && $json.value !== '' }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3100,
+        520
+      ],
+      "id": "if-has-calendar-msg",
+      "name": "Has Calendar Msg?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/editMessageText",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat_id, message_id: $('Get Calendar Msg ID').first().json.value, text: $json.text, parse_mode: 'HTML', reply_markup: $json.reply_markup }) }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3300,
+        500
+      ],
+      "id": "edit-calendar",
+      "name": "Edit Calendar"
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = $input.first().json; const id = res?.result?.message_id || res?.message_id || null; return [{ json: { user_id: $('Extract User Data').first().json.user_id, calendar_message_id: String(id || '') } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3700,
+        560
+      ],
+      "id": "extract-calendar-msg-id",
+      "name": "Extract Calendar Msg ID"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=ozon:ui:{{ $json.user_id }}:calendar_msg_id",
+        "value": "={{ $json.calendar_message_id }}",
+        "options": {
+          "ttl": 86400
+        }
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        560
+      ],
+      "id": "persist-calendar-msg-id",
+      "name": "Persist Calendar Msg ID",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:ui:{{ $('Extract User Data').first().json.user_id }}:calendar_msg_id",
+        "propertyName": "value"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3100,
+        240
+      ],
+      "id": "get-calendar-msg-id-init",
+      "name": "Get Calendar Msg ID (Init)",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "has-msg-init",
+              "leftValue": "={{ $json.value && $json.value !== '' }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3300,
+        240
+      ],
+      "id": "if-has-calendar-msg-init",
+      "name": "Has Calendar Msg? (Init)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/editMessageText",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat_id, message_id: $('Get Calendar Msg ID (Init)').first().json.value, text: $json.text, parse_mode: 'HTML', reply_markup: $json.reply_markup }) }}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3500,
+        220
+      ],
+      "id": "edit-calendar-init",
+      "name": "Edit Calendar (Init)"
+    },
+    {
+      "parameters": {
+        "jsCode": "const res = $input.first().json; const id = res?.result?.message_id || res?.message_id || null; return [{ json: { user_id: $('Extract User Data').first().json.user_id, calendar_message_id: String(id || '') } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3700,
+        260
+      ],
+      "id": "extract-calendar-msg-id-init",
+      "name": "Extract Calendar Msg ID (Init)"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=ozon:ui:{{ $json.user_id }}:calendar_msg_id",
+        "value": "={{ $json.calendar_message_id }}",
+        "options": {
+          "ttl": 86400
+        }
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        3900,
+        260
+      ],
+      "id": "persist-calendar-msg-id-init",
+      "name": "Persist Calendar Msg ID (Init)",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
     }
   ],
   "connections": {
-    "Telegram Trigger": { "main": [[{ "node": "Config", "type": "main", "index": 0 }]] },
-    "Config": { "main": [[{ "node": "Validate Config", "type": "main", "index": 0 }]] },
-    "Validate Config": { "main": [[{ "node": "Extract User Data", "type": "main", "index": 0 }]] },
-    "Extract User Data": { "main": [[{ "node": "Check Whitelist", "type": "main", "index": 0 }]] },
-    "Check Whitelist": { "main": [[{ "node": "Validate Whitelist", "type": "main", "index": 0 }]] },
-    "Validate Whitelist": { "main": [[{ "node": "Is Authorized?", "type": "main", "index": 0 }]] },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Validate Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Config": {
+      "main": [
+        [
+          {
+            "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User Data": {
+      "main": [
+        [
+          {
+            "node": "Check Whitelist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Whitelist": {
+      "main": [
+        [
+          {
+            "node": "Validate Whitelist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Whitelist": {
+      "main": [
+        [
+          {
+            "node": "Is Authorized?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Is Authorized?": {
       "main": [
-        [{ "node": "Check Admin", "type": "main", "index": 0 }],
-        [{ "node": "Unauthorized Response", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Check Admin",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unauthorized Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Check Admin": { "main": [[{ "node": "Route Message", "type": "main", "index": 0 }]] },
+    "Check Admin": {
+      "main": [
+        [
+          {
+            "node": "Route Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Route Message": {
       "main": [
-        [{ "node": "Generate Main Menu", "type": "main", "index": 0 }],
-        [{ "node": "Ensure CSV Document", "type": "main", "index": 0 }],
-        [{ "node": "Handle Menu", "type": "main", "index": 0 }],
-        [{ "node": "Handle Calendar Nav", "type": "main", "index": 0 }],
-        [{ "node": "Ensure XLSX Document", "type": "main", "index": 0 }],
-        [{ "node": "Get Selected Dates (Done)", "type": "main", "index": 0 }],
-        [{ "node": "Reset Dates", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Generate Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ensure CSV Document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ensure XLSX Document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Selected Dates (toggle)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handle Calendar Nav",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Selected Dates (Done)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reset Dates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
       ]
     },
-    "Generate Main Menu": { "main": [[{ "node": "Prepare Menu", "type": "main", "index": 0 }]] },
-    "Prepare Menu": { "main": [[{ "node": "Send Menu", "type": "main", "index": 0 }]] },
-    "Handle Menu": { "main": [[{ "node": "Prepare Menu Response", "type": "main", "index": 0 }]] },
-    "Prepare Menu Response": { "main": [[{ "node": "Send Menu Response", "type": "main", "index": 0 }]] },
-    "Ensure CSV Document": { "main": [[{ "node": "Get File from Telegram", "type": "main", "index": 0 }]] },
-    "Get File from Telegram": { "main": [[{ "node": "Extract from File (CSV)", "type": "main", "index": 0 }]] },
-    "Extract from File (CSV)": { "main": [[{ "node": "Parse Report File", "type": "main", "index": 0 }]] },
-    "Parse Report File": { "main": [[{ "node": "Cache CSV Meta", "type": "main", "index": 0 }]] },
-    "Cache CSV Meta": { "main": [[{ "node": "Calc Initial Month", "type": "main", "index": 0 }]] },
+    "Generate Main Menu": {
+      "main": [
+        [
+          {
+            "node": "Prepare Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Menu": {
+      "main": [
+        [
+          {
+            "node": "Send Menu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Menu": {
+      "main": [
+        [
+          {
+            "node": "Prepare Menu Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Menu Response": {
+      "main": [
+        [
+          {
+            "node": "Send Menu Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure CSV Document": {
+      "main": [
+        [
+          {
+            "node": "Get File from Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File from Telegram": {
+      "main": [
+        [
+          {
+            "node": "Extract from File (CSV)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File (CSV)": {
+      "main": [
+        [
+          {
+            "node": "Parse Report File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Report File": {
+      "main": [
+        [
+          {
+            "node": "Cache CSV Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache CSV Meta": {
+      "main": [
+        [
+          {
+            "node": "Calc Initial Month",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Calc Initial Month": {
-      "main": [[{ "node": "Fetch CSV Meta (for calendar)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch CSV Meta (for calendar)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Fetch CSV Meta (for calendar)": {
-      "main": [[{ "node": "Get Selected Dates", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Get Selected Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Get Selected Dates": {
-      "main": [[{ "node": "Render Calendar Grid", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Render Calendar Grid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Render Calendar Grid": { "main": [[{ "node": "Send Calendar", "type": "main", "index": 0 }]] },
+    "Render Calendar Grid": {
+      "main": [
+        [
+          {
+            "node": "Get Calendar Msg ID (Init)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Handle Calendar Nav": {
-      "main": [[{ "node": "Ensure Month For Render", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Ensure Month For Render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Ensure Month For Render": {
-      "main": [[{ "node": "Fetch CSV (Render)", "type": "main", "index": 0 }, { "node": "Get Month (Render)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Fetch CSV (Render)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Month (Render)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
-    "Fetch CSV (Render)": { "main": [[{ "node": "Render Calendar (rebuild)", "type": "main", "index": 0 }]] },
-    "Get Month (Render)": { "main": [[{ "node": "Render Calendar (rebuild)", "type": "main", "index": 0 }]] },
-    "Render Calendar (rebuild)": { "main": [[{ "node": "Send Calendar (rebuild)", "type": "main", "index": 0 }]] },
-    "Get Selected Dates (toggle)": { "main": [[{ "node": "Toggle Date", "type": "main", "index": 0 }]] },
+    "Fetch CSV (Render)": {
+      "main": [
+        [
+          {
+            "node": "Render Calendar (rebuild)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Month (Render)": {
+      "main": [
+        [
+          {
+            "node": "Render Calendar (rebuild)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Calendar (rebuild)": {
+      "main": [
+        [
+          {
+            "node": "Send Calendar (rebuild)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Selected Dates (toggle)": {
+      "main": [
+        [
+          {
+            "node": "Toggle Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Toggle Date": {
-      "main": [[{ "node": "Persist Selected Dates", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Persist Selected Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Persist Selected Dates": {
       "main": [
-        [{ "node": "Fetch Cached Data (for grid)", "type": "main", "index": 0 }],
-        [{ "node": "Answer Callback (limit)", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Fetch Cached Data (for grid)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Answer Callback (limit)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Fetch Cached Data (for grid)": { "main": [[{ "node": "Pick Month For Re-render", "type": "main", "index": 0 }]] },
-    "Pick Month For Re-render": { "main": [[{ "node": "Fetch CSV (Render again)", "type": "main", "index": 0 }]] },
-    "Fetch CSV (Render again)": { "main": [[{ "node": "Render Calendar Grid (rerender)", "type": "main", "index": 0 }]] },
-    "Render Calendar Grid (rerender)": { "main": [[{ "node": "Send Calendar Grid", "type": "main", "index": 0 }]] },
-    "Reset Dates": { "main": [[{ "node": "Persist Selected (Reset)", "type": "main", "index": 0 }]] },
-    "Persist Selected (Reset)": { "main": [[{ "node": "Handle Calendar Nav", "type": "main", "index": 0 }]] },
-    "Get Selected Dates (Done)": { "main": [[{ "node": "Handle Done", "type": "main", "index": 0 }]] },
+    "Fetch Cached Data (for grid)": {
+      "main": [
+        [
+          {
+            "node": "Pick Month For Re-render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Month For Re-render": {
+      "main": [
+        [
+          {
+            "node": "Fetch CSV (Render again)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch CSV (Render again)": {
+      "main": [
+        [
+          {
+            "node": "Render Calendar Grid (rerender)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Dates": {
+      "main": [
+        [
+          {
+            "node": "Persist Selected (Reset)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist Selected (Reset)": {
+      "main": [
+        [
+          {
+            "node": "Handle Calendar Nav",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Selected Dates (Done)": {
+      "main": [
+        [
+          {
+            "node": "Handle Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Handle Done": {
       "main": [
-        [{ "node": "Get Cached Data (for stats)", "type": "main", "index": 0 }],
-        [{ "node": "Answer Callback (needSelect)", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Get Cached Data (for stats)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Answer Callback (needSelect)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Get Cached Data (for stats)": { "main": [[{ "node": "Calculate Statistics", "type": "main", "index": 0 }]] },
-    "Calculate Statistics": { "main": [[{ "node": "Send Statistics", "type": "main", "index": 0 }]] },
-    "Ensure XLSX Document": { "main": [[{ "node": "Get XLSX from Telegram", "type": "main", "index": 0 }]] },
-    "Get XLSX from Telegram": { "main": [[{ "node": "Extract from File (XLSX)", "type": "main", "index": 0 }]] },
-    "Extract from File (XLSX)": { "main": [[{ "node": "Parse Report File", "type": "main", "index": 0 }]] }
+    "Get Cached Data (for stats)": {
+      "main": [
+        [
+          {
+            "node": "Calculate Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Statistics": {
+      "main": [
+        [
+          {
+            "node": "Send Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure XLSX Document": {
+      "main": [
+        [
+          {
+            "node": "Get XLSX from Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get XLSX from Telegram": {
+      "main": [
+        [
+          {
+            "node": "Extract from File (XLSX)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File (XLSX)": {
+      "main": [
+        [
+          {
+            "node": "Parse Report File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Calendar Grid (rerender)": {
+      "main": [
+        [
+          {
+            "node": "Get Calendar Msg ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Calendar Msg ID": {
+      "main": [
+        [
+          {
+            "node": "Has Calendar Msg?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Calendar Msg?": {
+      "main": [
+        [
+          {
+            "node": "Edit Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Calendar Grid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Calendar": {
+      "main": [
+        [
+          {
+            "node": "Extract Calendar Msg ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Calendar Grid": {
+      "main": [
+        [
+          {
+            "node": "Extract Calendar Msg ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Calendar Msg ID": {
+      "main": [
+        [
+          {
+            "node": "Persist Calendar Msg ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Calendar Msg ID (Init)": {
+      "main": [
+        [
+          {
+            "node": "Has Calendar Msg? (Init)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Calendar Msg? (Init)": {
+      "main": [
+        [
+          {
+            "node": "Edit Calendar (Init)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Calendar (Init)": {
+      "main": [
+        [
+          {
+            "node": "Extract Calendar Msg ID (Init)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Calendar": {
+      "main": [
+        [
+          {
+            "node": "Extract Calendar Msg ID (Init)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Calendar Msg ID (Init)": {
+      "main": [
+        [
+          {
+            "node": "Persist Calendar Msg ID (Init)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "pinData": {},
   "active": false,
-  "settings": { "executionOrder": "v1" },
+  "settings": {
+    "executionOrder": "v1"
+  },
   "versionId": "2-calendar-grid-aligned",
-  "meta": { "instanceId": "ozon-bot-instance" },
+  "meta": {
+    "instanceId": "ozon-bot-instance"
+  },
   "tags": []
 }
