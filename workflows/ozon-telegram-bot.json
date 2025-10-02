@@ -83,9 +83,8 @@
     },
     {
       "parameters": {
-        "operation": "sismember",
-        "key": "ozon:acl:whitelist",
-        "member": "={{ $json.user_id }}",
+        "operation": "get",
+        "key": "=ozon:acl:whitelist:{{ $json.user_id }}",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -105,7 +104,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// compute role flags\nconst w=$json.value; const uid=$('Extract User Data').first().json.user_id; const su=$('Config').first().json.SUPERUSER_IDS||'';\nconst suIds=su.split(',').map(s=>s.trim()).filter(Boolean);\nconst isSu=suIds.includes(uid); const isAdmin=(w===1 || w==='1');\nif(!isSu && !isAdmin) throw new Error('⛔ Access denied');\nreturn { json:{...$('Extract User Data').first().json, is_superuser:isSu, is_admin:isAdmin, redis_value:w} };"
+        "jsCode": "// compute role flags\nconst uid = $('Extract User Data').first().json.user_id;\nconst su = $('Config').first().json.SUPERUSER_IDS || '';\nconst suIds = su.split(',').map(s => s.trim()).filter(Boolean);\nconst isSu = suIds.includes(uid);\n\n// читаем результаты Get из двух нод\nconst wRaw = $('Check Whitelist').first().json.value; // '1' | null\nconst aRaw = $('Check Admin').first().json.value;     // '1' | null\n\nconst isWhitelisted = wRaw === '1';\nconst isAdmin = aRaw === '1' || isSu;\n\nif (!isAdmin && !isWhitelisted && !isSu) {\n  throw new Error('⛔ Access denied');\n}\n\nreturn {\n  json: {\n    ...$('Extract User Data').first().json,\n    is_superuser: isSu,\n    is_admin: isAdmin,\n    is_whitelisted: isWhitelisted\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -174,9 +173,8 @@
     },
     {
       "parameters": {
-        "operation": "sismember",
-        "key": "ozon:acl:admins",
-        "member": "={{ $json.user_id }}",
+        "operation": "get",
+        "key": "=ozon:acl:admins:{{ $json.user_id }}",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -491,7 +489,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const chatId=$('Extract User Data').first().json.chat_id; const isAdmin=($('Check Admin').first().json.value===1 || $('Check Admin').first().json.value==='1');\nconst kb={ inline_keyboard:[[ {text:'📦 Заказы',callback_data:'menu:orders'} ],[ {text:'🎯 Кластеры',callback_data:'menu:clusters'} ]]}; if(isAdmin) kb.inline_keyboard.push([{text:'⚙️ Админка',callback_data:'menu:admin'}]);\nreturn [{ json:{ chat_id:chatId, text:'🤖 <b>Ozon Analytics Bot</b>\\\\n\\\\nВыберите раздел:', reply_markup:kb } }];"
+        "jsCode": "const chatId = $('Extract User Data').first().json.chat_id;\nconst adminRaw = $('Check Admin').first().json.value;\nconst isAdmin = adminRaw === '1';\n\nconst kb = {\n  inline_keyboard: [\n    [{ text: '📦 Заказы', callback_data: 'menu:orders' }],\n    [{ text: '🎯 Кластеры', callback_data: 'menu:clusters' }]\n  ]\n};\n\nif (isAdmin) {\n  kb.inline_keyboard.push([{ text: '⚙️ Админка', callback_data: 'menu:admin' }]);\n}\n\nreturn [{\n  json: {\n    chat_id: chatId,\n    text: '🤖 <b>Ozon Analytics Bot</b>\\\\n\\\\nВыберите раздел:',\n    reply_markup: kb\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
