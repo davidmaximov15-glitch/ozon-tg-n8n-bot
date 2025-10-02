@@ -311,6 +311,39 @@
               },
               "renameOutput": true,
               "outputKey": "DateSelection"
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "XLSX",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-xlsx-mime",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "cond-xlsx-ext",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".xlsx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
             }
           ]
         },
@@ -615,6 +648,114 @@
           "name": "Tg Ozon.Orders bot"
         }
       }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "is-csv",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "text/csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "is-csv-2",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.ms-excel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "is-csv-ext",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "CSV"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "is-xlsx",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "is-xlsx-ext",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".xlsx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "XLSX"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "none"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2000,
+        240
+      ],
+      "id": "detect-file-type-switch",
+      "name": "Detect File Type"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        300
+      ],
+      "id": "extract-from-file-xlsx",
+      "name": "Extract from File (XLSX)"
     }
   ],
   "connections": {
@@ -706,6 +847,13 @@
         [
           {
             "node": "Handle Date Callback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get File from Telegram",
             "type": "main",
             "index": 0
           }
@@ -870,7 +1018,7 @@
       "main": [
         [
           {
-            "node": "Extract from File",
+            "node": "Detect File Type",
             "type": "main",
             "index": 0
           }
@@ -893,6 +1041,35 @@
         [
           {
             "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect File Type": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File (XLSX)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File (XLSX)": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
             "type": "main",
             "index": 0
           }
