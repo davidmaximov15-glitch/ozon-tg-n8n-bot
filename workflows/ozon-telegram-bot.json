@@ -156,9 +156,10 @@
     {
       "parameters": {
         "chatId": "={{ $('Extract User Data').first().json.chat_id }}",
-        "text": "⛔ Доступ запрещен. Вы не в белом списке.\n\nОбратитесь к администратору для получения доступа.",
+        "text": "⛔ <b>Доступ запрещен</b>. Вы не в белом списке.\\n\\nОбратитесь к администратору для получения доступа.",
         "additionalFields": {
-          "appendAttribution": false
+          "appendAttribution": false,
+          "parse_mode": "HTML"
         }
       },
       "type": "n8n-nodes-base.telegram",
@@ -400,7 +401,7 @@
         240
       ],
       "id": "parse-csv-node",
-      "name": "Parse CSV"
+      "name": "Parse Report File"
     },
     {
       "parameters": {
@@ -654,100 +655,6 @@
     },
     {
       "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "is-csv",
-                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
-                    "rightValue": "text/csv",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  },
-                  {
-                    "id": "is-csv-2",
-                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
-                    "rightValue": "application/vnd.ms-excel",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  },
-                  {
-                    "id": "is-csv-ext",
-                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
-                    "rightValue": ".csv",
-                    "operator": {
-                      "type": "string",
-                      "operation": "endsWith"
-                    }
-                  }
-                ],
-                "combinator": "or"
-              },
-              "renameOutput": true,
-              "outputKey": "CSV"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "is-xlsx",
-                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
-                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  },
-                  {
-                    "id": "is-xlsx-ext",
-                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
-                    "rightValue": ".xlsx",
-                    "operator": {
-                      "type": "string",
-                      "operation": "endsWith"
-                    }
-                  }
-                ],
-                "combinator": "or"
-              },
-              "renameOutput": true,
-              "outputKey": "XLSX"
-            }
-          ]
-        },
-        "options": {
-          "fallbackOutput": "none"
-        }
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        2000,
-        240
-      ],
-      "id": "detect-file-type-switch",
-      "name": "Detect File Type"
-    },
-    {
-      "parameters": {
         "operation": "xlsx",
         "options": {}
       },
@@ -772,6 +679,42 @@
       ],
       "id": "ensure-document",
       "name": "Ensure Document"
+    },
+    {
+      "parameters": {
+        "jsCode": "const doc = $('Extract User Data').first().json.document;\nif (!doc?.file_id) {\n  throw new Error('No document attached. Please send a CSV/XLSX file.');\n}\nreturn [{ json: $json }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1860,
+        300
+      ],
+      "id": "ensure-document-xlsx",
+      "name": "Ensure XLSX Document"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $('Extract User Data').first().json.document.file_id }}",
+        "additionalFields": {
+          "download": true
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2060,
+        300
+      ],
+      "id": "get-file-telegram-xlsx",
+      "name": "Get XLSX from Telegram",
+      "credentials": {
+        "telegramApi": {
+          "id": "p4dTUZho7h1VsmzM",
+          "name": "Tg Ozon.Orders bot"
+        }
+      }
     }
   ],
   "connections": {
@@ -866,6 +809,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Ensure XLSX Document",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -885,17 +835,6 @@
         [
           {
             "node": "Prepare Menu Response",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse CSV": {
-      "main": [
-        [
-          {
-            "node": "Cache to Redis",
             "type": "main",
             "index": 0
           }
@@ -1016,7 +955,7 @@
       "main": [
         [
           {
-            "node": "Parse CSV",
+            "node": "Parse Report File",
             "type": "main",
             "index": 0
           }
@@ -1027,7 +966,7 @@
       "main": [
         [
           {
-            "node": "Detect File Type",
+            "node": "Extract from File",
             "type": "main",
             "index": 0
           }
@@ -1056,29 +995,11 @@
         ]
       ]
     },
-    "Detect File Type": {
-      "main": [
-        [
-          {
-            "node": "Extract from File",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Extract from File (XLSX)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Extract from File (XLSX)": {
       "main": [
         [
           {
-            "node": "Parse CSV",
+            "node": "Parse Report File",
             "type": "main",
             "index": 0
           }
@@ -1090,6 +1011,39 @@
         [
           {
             "node": "Get File from Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Report File": {
+      "main": [
+        [
+          {
+            "node": "Cache to Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ensure XLSX Document": {
+      "main": [
+        [
+          {
+            "node": "Get XLSX from Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get XLSX from Telegram": {
+      "main": [
+        [
+          {
+            "node": "Extract from File (XLSX)",
             "type": "main",
             "index": 0
           }
