@@ -1,5 +1,5 @@
 {
-  "name": "Ozon Telegram Bot - Orders Analytics",
+  "name": "Ozon Telegram Bot - Orders Analytics (patched)",
   "nodes": [
     {
       "parameters": {
@@ -84,7 +84,7 @@
     },
     {
       "parameters": {
-        "operation": "xlsx",
+        "operation": "csv",
         "options": {}
       },
       "type": "n8n-nodes-base.extractFromFile",
@@ -152,7 +152,7 @@
     },
     {
       "parameters": {
-        "chatId": "={{ $('Extract User Data').item.json.chat_id }}",
+        "chatId": "={{ $('Extract User Data').first().json.chat_id }}",
         "text": "⛔ Доступ запрещен. Вы не в белом списке.\n\nОбратитесь к администратору для получения доступа.",
         "additionalFields": {
           "appendAttribution": false
@@ -176,7 +176,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:acl:admins:{{ $('Extract User Data').item.json.user_id }}",
+        "key": "=ozon:acl:admins:{{ $('Extract User Data').first().json.user_id }}",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -209,7 +209,7 @@
                 "conditions": [
                   {
                     "id": "cond-start",
-                    "leftValue": "={{ $('Extract User Data').item.json.message_text }}",
+                    "leftValue": "={{ $('Extract User Data').first().json.message_text }}",
                     "rightValue": "/start",
                     "operator": {
                       "type": "string",
@@ -232,16 +232,34 @@
                 },
                 "conditions": [
                   {
-                    "id": "cond-csv",
-                    "leftValue": "={{ $('Extract User Data').item.json.document?.mime_type }}",
+                    "id": "cond-csv-mime1",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
                     "rightValue": "text/csv",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
                     }
+                  },
+                  {
+                    "id": "cond-csv-mime2",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.ms-excel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "id": "cond-csv-ext",
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
                   }
                 ],
-                "combinator": "and"
+                "combinator": "or"
               },
               "renameOutput": true,
               "outputKey": "CSV"
@@ -257,7 +275,7 @@
                 "conditions": [
                   {
                     "id": "cond-menu",
-                    "leftValue": "={{ $('Extract User Data').item.json.callback_data }}",
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
                     "rightValue": "menu:",
                     "operator": {
                       "type": "string",
@@ -281,7 +299,7 @@
                 "conditions": [
                   {
                     "id": "cond-date",
-                    "leftValue": "={{ $('Extract User Data').item.json.callback_data }}",
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
                     "rightValue": "date:",
                     "operator": {
                       "type": "string",
@@ -337,7 +355,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parse CSV line handling quotes\nfunction parseCSVLine(line) {\n  const values = [];\n  let current = '';\n  let inQuotes = false;\n  \n  for (let i = 0; i < line.length; i++) {\n    const char = line[i];\n    \n    if (char === '\"') {\n      if (inQuotes && line[i + 1] === '\"') {\n        current += '\"';\n        i++;\n      } else {\n        inQuotes = !inQuotes;\n      }\n    } else if (char === ',' && !inQuotes) {\n      values.push(current.trim());\n      current = '';\n    } else {\n      current += char;\n    }\n  }\n  \n  values.push(current.trim());\n  return values;\n}\n\nfunction detectReportType(headers) {\n  const headersLower = headers.map(h => h.toLowerCase());\n  if (headersLower.some(h => h.includes('номер заказа'))) return 'FBO';\n  if (headersLower.some(h => h.includes('№ заказа'))) return 'FBS';\n  return 'UNKNOWN';\n}\n\nfunction findValue(record, possibleKeys, fallback = '') {\n  for (const key of possibleKeys) {\n    if (record[key] !== undefined && record[key] !== '') {\n      return record[key];\n    }\n  }\n  return fallback;\n}\n\nfunction normalizeRecord(headers, values, reportType) {\n  const record = {};\n  headers.forEach((header, idx) => {\n    record[header] = values[idx] || '';\n  });\n\n  let orderId, sku, quantity, price, createdAt, status;\n\n  if (reportType === 'FBO') {\n    orderId = findValue(record, ['Номер заказа'], values[0]);\n    sku = findValue(record, ['Артикул'], values[6]);\n    quantity = parseInt(findValue(record, ['Количество'], values[8]) || '1');\n    price = parseFloat(findValue(record, ['Цена'], values[13]) || '0');\n    createdAt = findValue(record, ['Дата создания'], values[15]);\n    status = findValue(record, ['Статус'], values[16]);\n  } else {\n    orderId = findValue(record, ['№ заказа'], values[0]);\n    sku = findValue(record, ['Артикул продавца', 'Артикул'], values[1]);\n    quantity = parseInt(findValue(record, ['Кол-во'], values[2]) || '1');\n    price = parseFloat(findValue(record, ['Цена'], values[3]) || '0');\n    createdAt = findValue(record, ['Дата создания'], values[4]);\n    status = findValue(record, ['Статус'], values[5]);\n  }\n\n  if (!orderId || !sku) return null;\n\n  return {\n    order_id: orderId,\n    sku: sku,\n    quantity: isNaN(quantity) ? 1 : quantity,\n    price: isNaN(price) ? 0 : price,\n    created_at: createdAt,\n    status: status ? status.toLowerCase() : ''\n  };\n}\n\n// Main parsing\nconst csvData = $json.data;\nconst lines = csvData.trim().split('\\n');\n\nif (lines.length < 2) {\n  throw new Error('CSV файл пустой');\n}\n\nconst headers = parseCSVLine(lines[0]);\nconst reportType = detectReportType(headers);\n\nif (reportType === 'UNKNOWN') {\n  throw new Error('Не удалось определить тип отчета');\n}\n\nconst records = [];\nfor (let i = 1; i < lines.length; i++) {\n  const line = lines[i].trim();\n  if (!line) continue;\n  \n  try {\n    const values = parseCSVLine(line);\n    const record = normalizeRecord(headers, values, reportType);\n    if (record) records.push(record);\n  } catch (e) {}\n}\n\nconst dates = new Set();\nrecords.forEach(record => {\n  if (record.created_at) {\n    try {\n      const date = new Date(record.created_at);\n      const mskDate = new Date(date.getTime() + 3 * 60 * 60 * 1000);\n      const dateStr = mskDate.toISOString().split('T')[0];\n      dates.add(dateStr);\n    } catch (e) {}\n  }\n});\n\nconst availableDates = Array.from(dates).sort();\n\nreturn [{\n  json: {\n    reportType,\n    records,\n    availableDates,\n    totalRecords: records.length,\n    chat_id: $('Extract User Data').first().json.chat_id,\n    user_id: $('Extract User Data').first().json.user_id\n  }\n}];"
+        "jsCode": "// === ЧТЕНИЕ ПОСЛЕ Extract from File ===\nconst rows = $input.all().map(i => i.json.row ?? i.json).filter(Boolean);\nif (rows.length === 0) {\n  throw new Error('Extract from File не вернул ни одной строки');\n}\n\nconst keysLower = Object.keys(rows[0]).map(k => k.toLowerCase());\nfunction detectReportType(keys) {\n  const isFBS = keys.some(k => k.includes('способ отгрузки') || k.includes('перевозчик') || k.includes('название метода') || k.includes('дата отгрузки без просрочки'));\n  const isFBO = keys.some(k => k.includes('юридическое лицо') || k.includes('оценка отгрузки'));\n  if (isFBS) return 'FBS';\n  if (isFBO) return 'FBO';\n  return 'UNKNOWN';\n}\nconst reportType = detectReportType(keysLower);\nif (reportType === 'UNKNOWN') {\n  throw new Error('Не удалось определить тип отчёта по заголовкам');\n}\n\nfunction pick(obj, names, fallback = '') {\n  for (const n of names) {\n    if (obj[n] !== undefined && String(obj[n]).trim() !== '') return obj[n];\n  }\n  return fallback;\n}\n\nconst records = [];\nfor (const r of rows) {\n  let order_id, sku, quantity, price, created_at, status;\n  if (reportType === 'FBO') {\n    order_id   = pick(r, ['Номер заказа']);\n    sku        = pick(r, ['Артикул', 'OZON id']);\n    quantity   = Number(pick(r, ['Количество'], 1));\n    price      = Number(pick(r, ['Ваша цена', 'Сумма отправления'], 0));\n    created_at = pick(r, ['Принят в обработку','Дата отгрузки','Фактическая дата передачи в доставку']);\n    status     = pick(r, ['Статус'], '');\n  } else {\n    order_id   = pick(r, ['Номер заказа','№ заказа']);\n    sku        = pick(r, ['Артикул','Артикул продавца','OZON id']);\n    quantity   = Number(pick(r, ['Количество','Кол-во'], 1));\n    price      = Number(pick(r, ['Ваша цена','Сумма отправления'], 0));\n    created_at = pick(r, ['Принят в обработку','Дата отгрузки','Дата отгрузки без просрочки']);\n    status     = pick(r, ['Статус'], '');\n  }\n  if (!order_id || !sku) continue;\n  records.push({\n    order_id,\n    sku,\n    quantity: Number.isFinite(quantity) ? quantity : 1,\n    price: Number.isFinite(price) ? price : 0,\n    created_at,\n    status: String(status || '').toLowerCase(),\n  });\n}\n\nconst dates = new Set();\nfor (const rec of records) {\n  if (!rec.created_at) continue;\n  const d = new Date(rec.created_at);\n  if (isNaN(d)) continue;\n  const msk = new Date(d.getTime() + 3 * 60 * 60 * 1000);\n  dates.add(msk.toISOString().split('T')[0]);\n}\n\nconst availableDates = Array.from(dates).sort();\nconst chatId = $('Extract User Data').first().json.chat_id;\nconst userId = $('Extract User Data').first().json.user_id;\n\nreturn [{\n  json: {\n    reportType,\n    records,\n    availableDates,\n    totalRecords: records.length,\n    chat_id: chatId,\n    user_id: userId\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -350,7 +368,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const parsedData = $input.first().json;\nconst availableDates = parsedData.availableDates;\n\nif (availableDates.length === 0) {\n  return [{\n    json: {\n      chat_id: parsedData.chat_id,\n      text: '❌ В файле не найдены даты',\n      reply_markup: null\n    }\n  }];\n}\n\nconst keyboard = {\n  inline_keyboard: availableDates.slice(0, 10).map(date => [{\n    text: date,\n    callback_data: `date:${date}`\n  }])\n};\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: `📅 Выберите дату для анализа:\\n\\nТип отчета: ${parsedData.reportType}\\nВсего записей: ${parsedData.totalRecords}`,\n    reply_markup: keyboard\n  }\n}];"
+        "jsCode": "const parsedData = $input.first().json;\nconst availableDates = parsedData.availableDates;\n\nif (availableDates.length === 0) {\n  return [{\n    json: {\n      chat_id: parsedData.chat_id,\n      text: '❌ В файле не найдены даты',\n      reply_markup: null\n    }\n  }];\n}\n\nconst keyboard = {\n  inline_keyboard: availableDates.slice(0, 10).map(date => [{\n    text: date,\n    callback_data: `date:${date}`\n  }])\n};\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: `📅 Выберите дату для анализа:\n\nТип отчета: ${parsedData.reportType}\nВсего записей: ${parsedData.totalRecords}`,\n    reply_markup: keyboard\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -424,7 +442,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const callbackData = $('Extract User Data').first().json.callback_data;\nconst selectedDate = callbackData.replace('date:', '');\nconst userId = $('Extract User Data').first().json.user_id;\n\n// Load cached data from Redis would go here\n// For now, return selection info\nreturn [{\n  json: {\n    selectedDate: selectedDate,\n    user_id: userId,\n    chat_id: $('Extract User Data').first().json.chat_id,\n    startTime: '00:00',\n    endTime: '23:59'\n  }\n}];"
+        "jsCode": "const callbackData = $('Extract User Data').first().json.callback_data;\nconst selectedDate = callbackData.replace('date:', '');\nconst userId = $('Extract User Data').first().json.user_id;\n\nreturn [{\n  json: {\n    selectedDate: selectedDate,\n    user_id: userId,\n    chat_id: $('Extract User Data').first().json.chat_id,\n    startTime: '00:00',\n    endTime: '23:59'\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -471,7 +489,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 🔐 ПРОВЕРКА ДОСТУПА\n\n// Из текущего входа (Redis Check Whitelist)\nconst whitelistValue = $json.value;\n\n// Из других нод\nconst userId = $('Extract User Data').first().json.user_id;\nconst configSuperusers = $('Config').first().json.SUPERUSER_IDS || '';\n\n// Парсим superusers из Config\nconst superuserIds = configSuperusers.split(',').map(id => id.trim()).filter(id => id);\n\n// Проверяем: superuser из Config ИЛИ admin из Redis whitelist\nconst isSuperuser = superuserIds.includes(userId);\nconst isAdmin = whitelistValue === '1';\n\nif (!isSuperuser && !isAdmin) {\n  throw new Error('⛔ Access denied. Only superusers and admins can use this bot.');\n}\n\n// Объединяем все данные для следующих нод\nreturn {\n  json: {\n    ...$('Extract User Data').first().json,  // Все данные из Extract User Data\n    is_superuser: isSuperuser,\n    is_admin: isAdmin,\n    redis_value: whitelistValue\n  }\n};\n"
+        "jsCode": "// 🔐 ПРОВЕРКА ДОСТУПА\n\nconst whitelistValue = $json.value;\nconst userId = $('Extract User Data').first().json.user_id;\nconst configSuperusers = $('Config').first().json.SUPERUSER_IDS || '';\n\nconst superuserIds = configSuperusers.split(',').map(id => id.trim()).filter(id => id);\n\nconst isSuperuser = superuserIds.includes(userId);\nconst isAdmin = whitelistValue === '1';\n\nif (!isSuperuser && !isAdmin) {\n  throw new Error('⛔ Access denied. Only superusers and admins can use this bot.');\n}\n\nreturn {\n  json: {\n    ...$('Extract User Data').first().json,\n    is_superuser: isSuperuser,\n    is_admin: isAdmin,\n    redis_value: whitelistValue\n  }\n};\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -484,7 +502,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Подготовка сообщения с динамической inline keyboard\n// Входные данные уже содержат chat_id, text, reply_markup из предыдущего Code node\nconst input = $json;\n\n// Используем готовую клавиатуру\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\n\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: {\n      inline_keyboard: inlineKeyboard\n    }\n  }\n}];"
+        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -498,7 +516,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -515,7 +533,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Подготовка сообщения с динамической inline keyboard\n// Входные данные уже содержат chat_id, text, reply_markup из предыдущего Code node\nconst input = $json;\n\n// Используем готовую клавиатуру\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\n\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: {\n      inline_keyboard: inlineKeyboard\n    }\n  }\n}];"
+        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -529,7 +547,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -546,7 +564,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Подготовка сообщения с динамической inline keyboard\n// Входные данные уже содержат chat_id, text, reply_markup из предыдущего Code node\nconst input = $json;\n\n// Используем готовую клавиатуру\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\n\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: {\n      inline_keyboard: inlineKeyboard\n    }\n  }\n}];"
+        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -560,7 +578,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').item.json.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json) }}",
@@ -579,7 +597,7 @@
       "parameters": {
         "resource": "file",
         "fileId": "={{ $('Telegram Trigger').first().json.message.document.file_id }}",
-        "additionalFields": {}
+        "additionalFields": { "download": true }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -601,303 +619,173 @@
     "Telegram Trigger": {
       "main": [
         [
-          {
-            "node": "Config",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Config", "type": "main", "index": 0 }
         ]
       ]
     },
     "Extract User Data": {
       "main": [
         [
-          {
-            "node": "Check Whitelist",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Check Whitelist", "type": "main", "index": 0 }
         ]
       ]
     },
     "Check Whitelist": {
       "main": [
         [
-          {
-            "node": "Validate Whitelist",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Validate Whitelist", "type": "main", "index": 0 }
         ]
       ]
     },
     "Is Authorized?": {
       "main": [
         [
-          {
-            "node": "Check Admin",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Check Admin", "type": "main", "index": 0 }
         ],
         [
-          {
-            "node": "Unauthorized Response",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Unauthorized Response", "type": "main", "index": 0 }
         ]
       ]
     },
     "Check Admin": {
       "main": [
         [
-          {
-            "node": "Route Message",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Route Message", "type": "main", "index": 0 }
         ]
       ]
     },
     "Route Message": {
       "main": [
         [
-          {
-            "node": "Generate Main Menu",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Generate Main Menu", "type": "main", "index": 0 }
         ],
         [
-          {
-            "node": "Get File from Telegram",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Get File from Telegram", "type": "main", "index": 0 }
         ],
         [
-          {
-            "node": "Handle Menu",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Handle Menu", "type": "main", "index": 0 }
         ],
         [
-          {
-            "node": "Handle Date Callback",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Handle Date Callback", "type": "main", "index": 0 }
         ]
       ]
     },
     "Generate Main Menu": {
       "main": [
         [
-          {
-            "node": "Prepare Menu",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Prepare Menu", "type": "main", "index": 0 }
         ]
       ]
     },
     "Handle Menu": {
       "main": [
         [
-          {
-            "node": "Prepare Menu Response",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Prepare Menu Response", "type": "main", "index": 0 }
         ]
       ]
     },
     "Parse CSV": {
       "main": [
         [
-          {
-            "node": "Cache to Redis",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Cache to Redis", "type": "main", "index": 0 }
         ]
       ]
     },
     "Generate Date Keyboard": {
       "main": [
         [
-          {
-            "node": "Prepare Date Selection",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Prepare Date Selection", "type": "main", "index": 0 }
         ]
       ]
     },
     "Cache to Redis": {
       "main": [
         [
-          {
-            "node": "Generate Date Keyboard",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Generate Date Keyboard", "type": "main", "index": 0 }
         ]
       ]
     },
     "Handle Date Callback": {
       "main": [
         [
-          {
-            "node": "Get Cached Data",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Get Cached Data", "type": "main", "index": 0 }
         ]
       ]
     },
     "Get Cached Data": {
       "main": [
         [
-          {
-            "node": "Merge Selection with Data",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Merge Selection with Data", "type": "main", "index": 0 }
         ]
       ]
     },
     "Merge Selection with Data": {
       "main": [
         [
-          {
-            "node": "Calculate Statistics",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Calculate Statistics", "type": "main", "index": 0 }
         ]
       ]
     },
     "Calculate Statistics": {
       "main": [
         [
-          {
-            "node": "Send Statistics",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send Statistics", "type": "main", "index": 0 }
         ]
       ]
     },
     "Validate Whitelist": {
       "main": [
         [
-          {
-            "node": "Is Authorized?",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Is Authorized?", "type": "main", "index": 0 }
         ]
       ]
     },
     "Prepare Menu": {
       "main": [
         [
-          {
-            "node": "Send Menu",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send Menu", "type": "main", "index": 0 }
         ]
       ]
     },
     "Prepare Menu Response": {
       "main": [
         [
-          {
-            "node": "Send Menu Response",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send Menu Response", "type": "main", "index": 0 }
         ]
       ]
     },
     "Prepare Date Selection": {
       "main": [
         [
-          {
-            "node": "Send Date Selection",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get File Path": {
-      "main": [
-        [
-          {
-            "node": "Download CSV",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Download CSV": {
-      "main": [
-        [
-          {
-            "node": "Parse CSV",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Config": {
-      "main": [
-        [
-          {
-            "node": "Validate Config",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Validate Config": {
-      "main": [
-        [
-          {
-            "node": "Extract User Data",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Send Date Selection", "type": "main", "index": 0 }
         ]
       ]
     },
     "Extract from File": {
       "main": [
         [
-          {
-            "node": "Parse CSV",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Parse CSV", "type": "main", "index": 0 }
         ]
       ]
     },
     "Get File from Telegram": {
       "main": [
         [
-          {
-            "node": "Extract from File",
-            "type": "main",
-            "index": 0
-          }
+          { "node": "Extract from File", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          { "node": "Validate Config", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Validate Config": {
+      "main": [
+        [
+          { "node": "Extract User Data", "type": "main", "index": 0 }
         ]
       ]
     }
@@ -907,7 +795,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "1",
+  "versionId": "1-patched",
   "meta": {
     "instanceId": "ozon-bot-instance"
   },
