@@ -2284,7 +2284,7 @@
       "main": [
         [
           {
-            "node": "Ensure Month For Render",
+            "node": "Get Month (Render smart)",
             "type": "main",
             "index": 0
           }
