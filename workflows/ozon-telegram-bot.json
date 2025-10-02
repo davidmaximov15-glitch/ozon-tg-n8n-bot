@@ -538,7 +538,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
+        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    parse_mode: \"HTML\",\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -569,7 +569,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
+        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    parse_mode: \"HTML\",\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -600,7 +600,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
+        "jsCode": "const input = $json;\nconst inlineKeyboard = input.reply_markup?.inline_keyboard || [];\nreturn [{\n  json: {\n    chat_id: input.chat_id,\n    text: input.text,\n    parse_mode: \"HTML\",\n    reply_markup: { inline_keyboard: inlineKeyboard }\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
