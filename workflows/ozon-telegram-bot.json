@@ -848,13 +848,6 @@
         ],
         [
           {
-            "node": "Ensure Document",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
             "node": "Handle Menu",
             "type": "main",
             "index": 0
