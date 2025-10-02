@@ -1977,13 +1977,6 @@
       "main": [
         [
           {
-            "node": "Prepare Menu Response",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
             "node": "Get CSV Meta (Menu)",
             "type": "main",
             "index": 0
