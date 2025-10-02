@@ -737,36 +737,6 @@
     },
     {
       "parameters": {
-        "jsCode": "const month=$('Calc Initial Month').first().json.month; const chatId=$('Calc Initial Month').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV Meta (for calendar)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\nlet selected=[]; try{ const raw=$('Get Selected Dates').first().json.value; selected=raw?JSON.parse(raw):[]; }catch(e){}\n// Build month grid\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[];\n// header weekdays\n// start pad from Mon\nlet startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){\n  const ds=`${month}-${String(d).padStart(2,'0')}`;\n  const isAvail=avail.has(ds); const isSel=selected.includes(ds);\n  const label=(isSel?'☑ ':'▫ ')+String(d);\n  row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' });\n  if(row.length===7){ rows.push(row); row=[]; }\n}\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[\n  { text:'◀', callback_data:`cal:${month}:prev` },\n  { text:`${month}`, callback_data:'noop' },\n  { text:'▶', callback_data:`cal:${month}:next` }\n];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово', callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово', callback_data:'noop'}); ctrl.push({text:'🗑 Сброс', callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ] };\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3460,
-        240
-      ],
-      "id": "n-render-cal",
-      "name": "Render Calendar Grid"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3660,
-        240
-      ],
-      "id": "n-send-cal",
-      "name": "Send Calendar"
-    },
-    {
-      "parameters": {
         "jsCode": "// input: callback_data = \"cal:YYYY-MM:prev\" | \"cal:YYYY-MM:next\"\nconst cb = $('Extract User Data').first().json.callback_data || '';\nconst [, ym, dir] = cb.split(':'); // [\"cal\",\"YYYY-MM\",\"prev|next\"]\n\nfunction shiftMonth(ymStr, step) {\n  const [y, m] = ymStr.split('-').map(Number);\n  const d = new Date(Date.UTC(y, (m - 1) + step, 1));\n  return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;\n}\n\n// навигация\nconst nextMonth = dir === 'prev' ? shiftMonth(ym, -1)\n                 : dir === 'next' ? shiftMonth(ym,  1)\n                 : ym;\n\n// отдаём дальше месяц и контекст\nreturn [{\n  json: {\n    month: nextMonth,\n    chat_id: $('Extract User Data').first().json.chat_id,\n    user_id: $('Extract User Data').first().json.user_id\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
@@ -777,91 +747,6 @@
       ],
       "id": "n-handle-calnav",
       "name": "Handle Calendar Nav"
-    },
-    {
-      "parameters": {
-        "operation": "get",
-        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
-        "propertyName": "value"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        2260,
-        320
-      ],
-      "id": "n-fetch-csv-render",
-      "name": "Fetch CSV (Render)",
-      "credentials": {
-        "redis": {
-          "id": "kaA0Glj8bB5pwqRt",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "get",
-        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates",
-        "propertyName": "value"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        2260,
-        400
-      ],
-      "id": "n-get-month-selected",
-      "name": "Get Month (Render)",
-      "credentials": {
-        "redis": {
-          "id": "kaA0Glj8bB5pwqRt",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const month=$('Handle Calendar Nav').first().json.month; return [{json:{month}}];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2080,
-        400
-      ],
-      "id": "n-ensure-month",
-      "name": "Ensure Month For Render"
-    },
-    {
-      "parameters": {
-        "jsCode": "let selected=[]; try{ const raw=$('Get Month (Render)').first().json.value; selected = raw?JSON.parse(raw):[]; }catch(e){}\nconst month=$('Ensure Month For Render').first().json.month; const chatId=$('Extract User Data').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV (Render)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\n// reuse same renderer as before (copied)\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[]; let startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){ const ds=`${month}-${String(d).padStart(2,'0')}`; const isAvail=avail.has(ds); const isSel=selected.includes(ds); const label=(isSel?'☑ ':'▫ ')+String(d); row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' }); if(row.length===7){ rows.push(row); row=[]; } }\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[{text:'◀',callback_data:`cal:${month}:prev`},{text:`${month}`,callback_data:'noop'},{text:'▶',callback_data:`cal:${month}:next`}];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово',callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово',callback_data:'noop'}); ctrl.push({text:'🗑 Сброс',callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ]};\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2460,
-        360
-      ],
-      "id": "n-render-month",
-      "name": "Render Calendar (rebuild)"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2660,
-        360
-      ],
-      "id": "n-send-cal-2",
-      "name": "Send Calendar (rebuild)"
     },
     {
       "parameters": {
@@ -958,70 +843,6 @@
           "name": "Redis account"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "let selected=$json.selectedDates||[]; const chatId=$json.chat_id; let meta={availableDates:[]}; try{ const raw=$('Fetch Cached Data (for grid)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\nconst months=new Set(meta.availableDates.map(d=>d.slice(0,7))); const month = selected[0]?.slice(0,7) || Array.from(months)[0] || new Date().toISOString().slice(0,7);\nreturn [{ json:{ month, chat_id:chatId } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2860,
-        520
-      ],
-      "id": "n-pick-month",
-      "name": "Pick Month For Re-render"
-    },
-    {
-      "parameters": {
-        "operation": "get",
-        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
-        "propertyName": "value"
-      },
-      "type": "n8n-nodes-base.redis",
-      "typeVersion": 1,
-      "position": [
-        3060,
-        520
-      ],
-      "id": "n-fetch-csv-rerender",
-      "name": "Fetch CSV (Render again)",
-      "credentials": {
-        "redis": {
-          "id": "kaA0Glj8bB5pwqRt",
-          "name": "Redis account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// reuse renderer with current month + selected from Redis\nlet selected=[]; try{ const raw=$('Persist Selected Dates').first().json.value; }catch(e){}\ntry{ const raw=$('Get Selected Dates (toggle)').first().json.value; selected = raw?JSON.parse(raw):[]; }catch(e){}\ntry{ if($json.selectedDates) selected=$json.selectedDates; }catch(e){}\nconst month=$('Pick Month For Re-render').first().json.month; const chatId=$('Toggle Date').first().json.chat_id;\nlet meta={availableDates:[]}; try{ const raw=$('Fetch CSV (Render again)').first().json.value; meta=raw?JSON.parse(raw):meta; }catch(e){}\nfunction daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y,m,0).getDate(); }\nfunction wd(y,m,d){ return new Date(`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}T00:00:00Z`).getUTCDay()||7; }\nconst [Y,M]=month.split('-').map(Number); const dim=daysInMonth(month);\nconst avail=new Set((meta.availableDates||[]).filter(d=>d.startsWith(month)));\nconst rows=[]; let row=[]; let startWd=wd(Y,M,1); for(let i=1;i<startWd;i++){ row.push({text:' ',callback_data:'noop'}); }\nfor(let d=1; d<=dim; d++){ const ds=`${month}-${String(d).padStart(2,'0')}`; const isAvail=avail.has(ds); const isSel=selected.includes(ds); const label=(isSel?'☑ ':'▫ ')+String(d); row.push({ text: label, callback_data: isAvail? `date:${ds}` : 'noop' }); if(row.length===7){ rows.push(row); row=[]; } }\nif(row.length) while(row.length<7) row.push({text:' ',callback_data:'noop'}),0; if(row.length) rows.push(row);\nconst nav=[{text:'◀',callback_data:`cal:${month}:prev`},{text:`${month}`,callback_data:'noop'},{text:'▶',callback_data:`cal:${month}:next`}];\nconst ctrl=[]; if(selected.length>0) ctrl.push({text:'✅ Готово',callback_data:'dates:done'}); else ctrl.push({text:'🔒 Готово',callback_data:'noop'}); ctrl.push({text:'🗑 Сброс',callback_data:'dates:reset'});\nconst keyboard={ inline_keyboard:[ nav, ...rows, ctrl ]};\nconst header = selected.length? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\nreturn [{ json:{ chat_id:chatId, text:`📅 Мультивыбор дат\\n\\n${header}`, reply_markup:keyboard } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3260,
-        520
-      ],
-      "id": "n-render-grid",
-      "name": "Render Calendar Grid (rerender)"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json) }}"
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3460,
-        520
-      ],
-      "id": "n-send-grid",
-      "name": "Send Calendar Grid"
     },
     {
       "parameters": {
@@ -2260,24 +2081,7 @@
     },
     "Get Selected Dates": {
       "main": [
-        [
-          {
-            "node": "Render Calendar Grid",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Render Calendar Grid": {
-      "main": [
-        [
-          {
-            "node": "Send Calendar",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Handle Calendar Nav": {
@@ -2285,55 +2089,6 @@
         [
           {
             "node": "Get Month (Render smart)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Ensure Month For Render": {
-      "main": [
-        [
-          {
-            "node": "Fetch CSV (Render)",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Get Month (Render)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch CSV (Render)": {
-      "main": [
-        [
-          {
-            "node": "Render Calendar (rebuild)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get Month (Render)": {
-      "main": [
-        [
-          {
-            "node": "Render Calendar (rebuild)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Render Calendar (rebuild)": {
-      "main": [
-        [
-          {
-            "node": "Send Calendar (rebuild)",
             "type": "main",
             "index": 0
           }
@@ -2385,39 +2140,6 @@
         [
           {
             "node": "Get Month (Render smart)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Pick Month For Re-render": {
-      "main": [
-        [
-          {
-            "node": "Fetch CSV (Render again)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Fetch CSV (Render again)": {
-      "main": [
-        [
-          {
-            "node": "Render Calendar Grid (rerender)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Render Calendar Grid (rerender)": {
-      "main": [
-        [
-          {
-            "node": "Send Calendar Grid",
             "type": "main",
             "index": 0
           }
