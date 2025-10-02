@@ -2577,6 +2577,17 @@
           }
         ]
       ]
+    },
+    "Edit Calendar (smart)": {
+      "main": [
+        [
+          {
+            "node": "Persist Calendar Msg ID (smart)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},
