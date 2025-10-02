@@ -195,99 +195,290 @@
     {
       "parameters": {
         "mode": "rules",
-        "rules": [
-          {
-            "type": "string",
-            "operation": "equal",
-            "value1": "={{ ($(\"Extract User Data\").first().json.text || \"\").trim() }}",
-            "value2": "/start",
-            "renameOutput": true,
-            "outputName": "text:/start"
-          },
-          {
-            "type": "string",
-            "operation": "equal",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": "menu:orders",
-            "renameOutput": true,
-            "outputName": "menu:orders"
-          },
-          {
-            "type": "string",
-            "operation": "equal",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": "cal:open",
-            "renameOutput": true,
-            "outputName": "cal:open"
-          },
-          {
-            "type": "string",
-            "operation": "contains",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": ":prev",
-            "renameOutput": true,
-            "outputName": "cal:prev"
-          },
-          {
-            "type": "string",
-            "operation": "contains",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": ":next",
-            "renameOutput": true,
-            "outputName": "cal:next"
-          },
-          {
-            "type": "string",
-            "operation": "startsWith",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": "date:",
-            "renameOutput": true,
-            "outputName": "date:*"
-          },
-          {
-            "type": "string",
-            "operation": "equal",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": "dates:reset",
-            "renameOutput": true,
-            "outputName": "dates:reset"
-          },
-          {
-            "type": "string",
-            "operation": "equal",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": "dates:done",
-            "renameOutput": true,
-            "outputName": "dates:done"
-          },
-          {
-            "type": "string",
-            "operation": "equal",
-            "value1": "={{ $(\"Extract User Data\").first().json.callback_data || \"\" }}",
-            "value2": "file:clear",
-            "renameOutput": true,
-            "outputName": "file:clear"
-          },
-          {
-            "type": "string",
-            "operation": "matchesRegex",
-            "value1": "={{ ( $(\"Extract User Data\").first().json.document?.file_name || \"\" ).toLowerCase() }}",
-            "value2": "\\\\.csv$",
-            "renameOutput": true,
-            "outputName": "file:csv"
-          },
-          {
-            "type": "string",
-            "operation": "matchesRegex",
-            "value1": "={{ ( $(\"Extract User Data\").first().json.document?.file_name || \"\" ).toLowerCase() }}",
-            "value2": "\\\\.xlsx$",
-            "renameOutput": true,
-            "outputName": "file:xlsx"
-          }
-        ],
+        "rules": {
+          "values": [
+            {
+              "outputKey": "Start",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.message_text }}",
+                    "rightValue": "/start",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "CSV",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "text/csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.ms-excel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
+            },
+            {
+              "outputKey": "XLSX",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.mime_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.document?.file_name }}",
+                    "rightValue": ".xlsx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "endsWith"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              }
+            },
+            {
+              "outputKey": "Menu",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "menu:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "DateSelection",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "date:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "CalNav",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "cal:",
+                    "operator": {
+                      "type": "string",
+                      "operation": "startsWith"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "DatesDone",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "dates:done",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "DatesReset",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "dates:reset",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "Noop",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "noop",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "CalOpen",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "cal:open",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "FileClear",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "file:clear",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "FileUpload",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "file:upload",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
         "options": {
-          "addIfNoMatch": true,
+          "fallbackOutput": "none",
           "ignoreCase": false,
+          "lessStrictTypeValidation": false,
           "sendDataToAllMatches": false
         }
       },
@@ -1686,28 +1877,21 @@
         ],
         [
           {
+            "node": "Ensure CSV Document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ensure XLSX Document",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Handle Menu",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Fetch CSV Meta (calopen)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Handle Calendar Nav",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Handle Calendar Nav",
             "type": "main",
             "index": 0
           }
@@ -1721,7 +1905,7 @@
         ],
         [
           {
-            "node": "Reset Dates",
+            "node": "Handle Calendar Nav",
             "type": "main",
             "index": 0
           }
@@ -1735,21 +1919,22 @@
         ],
         [
           {
+            "node": "Reset Dates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [
+          {
+            "node": "Fetch CSV Meta (calopen)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Get Calendar Msg ID (clear)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Ensure CSV Document",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Ensure XLSX Document",
             "type": "main",
             "index": 0
           }
