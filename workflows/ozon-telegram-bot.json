@@ -1876,6 +1876,85 @@
       ],
       "id": "send-start-prompt",
       "name": "Send Start Prompt"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ Array.isArray($json.selectedDates) && $json.selectedDates.length > 0 }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2460,
+        700
+      ],
+      "id": "has-selection",
+      "name": "Has Selection?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.value }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2280,
+        760
+      ],
+      "id": "has-csv",
+      "name": "Has CSV?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": {{ JSON.stringify($('Extract User Data').first().json.callback_query_id) }},\n  \"text\": \"Файл не найден. Загрузите отчёт .csv/.xlsx\",\n  \"show_alert\": false\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2480,
+        820
+      ],
+      "id": "answer-callback-no-file",
+      "name": "Answer Callback (no-file)"
     }
   ],
   "connections": {
@@ -2394,14 +2473,7 @@
       "main": [
         [
           {
-            "node": "Get Cached Data (for stats)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Answer Callback (needSelect)",
+            "node": "Has Selection?",
             "type": "main",
             "index": 0
           }
@@ -2412,7 +2484,7 @@
       "main": [
         [
           {
-            "node": "Calculate Statistics",
+            "node": "Has CSV?",
             "type": "main",
             "index": 0
           }
@@ -2761,6 +2833,42 @@
         [
           {
             "node": "Answer Callback (cleared)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Selection?": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback (needSelect)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Cached Data (for stats)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has CSV?": {
+      "main": [
+        [
+          {
+            "node": "Answer Callback (no-file)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calculate Statistics",
             "type": "main",
             "index": 0
           }
