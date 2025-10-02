@@ -71,7 +71,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Extract user data from Telegram Trigger\nconst telegramData = $('Telegram Trigger').first().json;\nconst message = telegramData.message;\nconst callback = telegramData.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\n\n// Объединяем с тем что пришло (Config данные от Validate Config)\nreturn {\n  json: {\n    ...$json,  // Config данные (TELEGRAM_BOT_TOKEN, SUPERUSER_IDS)\n    user_id: String(userId),\n    chat_id: String(chatId),\n    message_text: messageText,\n    callback_data: callbackData,\n    document: document\n  },\n  binary: $binary\n};\n"
+        "jsCode": "// Extract user data from Telegram Trigger\nconst telegramData = $('Telegram Trigger').first().json;\nconst message = telegramData.message;\nconst callback = telegramData.callback_query;\n\nconst userId = message?.from?.id || callback?.from?.id;\nconst chatId = message?.chat?.id || callback?.message?.chat?.id;\nconst messageText = message?.text || '';\nconst callbackData = callback?.data || '';\nconst document = message?.document || null;\nconst callbackQueryId = callback?.id || '';\n\nreturn {\n  json: {\n    ...$json,\n    user_id: String(userId),\n    chat_id: String(chatId),\n    message_text: messageText,\n    callback_data: callbackData,\n    callback_query_id: callbackQueryId,\n    document: document\n  },\n  binary: $binary\n};\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -372,6 +372,54 @@
               },
               "renameOutput": true,
               "outputKey": "Start"
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "DatesDone",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-dates-done",
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "dates:done",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "renameOutput": true,
+              "outputKey": "DatesReset",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cond-dates-reset",
+                    "leftValue": "={{ $('Extract User Data').first().json.callback_data }}",
+                    "rightValue": "dates:reset",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             }
           ]
         },
@@ -429,7 +477,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const parsedData = $input.first().json;\nconst availableDates = parsedData.availableDates;\n\nif (availableDates.length === 0) {\n  return [{\n    json: {\n      chat_id: parsedData.chat_id,\n      text: '❌ В файле не найдены даты',\n      reply_markup: null\n    }\n  }];\n}\n\nconst keyboard = {\n  inline_keyboard: availableDates.slice(0, 10).map(date => [{\n    text: date,\n    callback_data: `date:${date}`\n  }])\n};\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: `📅 Выберите дату для анализа:\n\nТип отчета: ${parsedData.reportType}\nВсего записей: ${parsedData.totalRecords}`,\n    reply_markup: keyboard\n  }\n}];"
+        "jsCode": "const parsedData = $input.first().json;\nconst availableDates = parsedData.availableDates;\n\nif (availableDates.length === 0) {\n  return [{\n    json: {\n      chat_id: parsedData.chat_id,\n      text: '❌ В файле не найдены даты',\n      reply_markup: null\n    }\n  }];\n}\n\nconst keyboard = {\n  inline_keyboard: availableDates.map(date => [{\n    text: date,\n    callback_data: `date:${date}`\n  }])\n};\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: `📅 Выберите дату для анализа:\n\nТип отчета: ${parsedData.reportType}\nВсего записей: ${parsedData.totalRecords}`,\n    reply_markup: keyboard\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -442,7 +490,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Вставить сверху (перед filterRecordsByDateTime):\nfunction parseAsMsk(dateStr) {\n  if (!dateStr) return null;\n  let d = dateStr;\n  // '2025-09-30 07:40:08' -> '2025-09-30T07:40:08Z' (как в Parse CSV)\n  if (/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(d)) {\n    d = d.replace(' ', 'T') + 'Z';\n  }\n  const base = new Date(d);\n  if (isNaN(base)) return null;\n  // приводим к МСК (+3ч)\n  return new Date(base.getTime() + 3 * 60 * 60 * 1000);\n}\n\nfunction filterRecordsByDateTime(records, date, startTime, endTime) {\n  return records.filter(record => {\n    const mskDate = parseAsMsk(record.created_at);\n    if (!mskDate) return false;\n    const recordDateStr = mskDate.toISOString().split('T')[0];\n    const recordTimeStr = mskDate.toTimeString().split(' ')[0].substring(0, 5);\n    return recordDateStr === date && recordTimeStr >= startTime && recordTimeStr <= endTime;\n  });\n}\n\nfunction calculateStatistics(records, date, startTime, endTime) {\n  const filteredRecords = filterRecordsByDateTime(records, date, startTime, endTime);\n  \n  if (filteredRecords.length === 0) {\n    return {\n      date, startTime, endTime,\n      totalOrders: 0,\n      totalCancellations: 0,\n      totalRevenue: 0,\n      skuStats: {},\n      message: 'Нет данных за указанный период'\n    };\n  }\n\n  const statsBySku = {};\n  const revenueStatuses = ['доставлен', 'доставляется', 'ожидает сборки', 'ожидает отгрузки'];\n  const cancelStatuses = ['отменён', 'отменен', 'возврат'];\n\n  filteredRecords.forEach(record => {\n    const sku = record.sku;\n    const status = record.status.toLowerCase();\n    const quantity = record.quantity || 1;\n    const price = record.price || 0;\n    \n    if (!statsBySku[sku]) {\n      statsBySku[sku] = {\n        totalOrders: 0,\n        cancellations: 0,\n        totalRevenue: 0,\n        weightedPriceSum: 0,\n        weightedQuantitySum: 0,\n        avgPrice: 0\n      };\n    }\n    \n    statsBySku[sku].totalOrders += quantity;\n    \n    if (cancelStatuses.some(s => status.includes(s))) {\n      statsBySku[sku].cancellations += quantity;\n    }\n    \n    if (revenueStatuses.some(s => status.includes(s))) {\n      statsBySku[sku].totalRevenue += price * quantity;\n      statsBySku[sku].weightedPriceSum += price * quantity;\n      statsBySku[sku].weightedQuantitySum += quantity;\n    }\n  });\n\n  Object.keys(statsBySku).forEach(sku => {\n    const stats = statsBySku[sku];\n    if (stats.weightedQuantitySum > 0) {\n      stats.avgPrice = stats.weightedPriceSum / stats.weightedQuantitySum;\n    }\n  });\n\n  let totalOrders = 0, totalCancellations = 0, totalRevenue = 0;\n  Object.values(statsBySku).forEach(stats => {\n    totalOrders += stats.totalOrders;\n    totalCancellations += stats.cancellations;\n    totalRevenue += stats.totalRevenue;\n  });\n\n  return { date, startTime, endTime, totalOrders, totalCancellations, totalRevenue, skuStats: statsBySku };\n}\n\nfunction formatStatisticsMessage(stats) {\n  let message = `📊 <b>Статистика заказов</b>\\n\\n`;\n  message += `📅 Дата: ${stats.date}\\n`;\n  message += `⏰ Время: ${stats.startTime} - ${stats.endTime}\\n\\n`;\n\n  if (stats.totalOrders === 0) {\n    message += stats.message || 'Нет данных';\n    return message;\n  }\n\n  const sortedSkus = Object.keys(stats.skuStats).sort();\n  sortedSkus.forEach(sku => {\n    const skuStats = stats.skuStats[sku];\n    message += `<b>${sku}</b>\\n`;\n    message += `  • Заказов: ${skuStats.totalOrders}\\n`;\n    message += `  • Отмен: ${skuStats.cancellations}\\n`;\n    message += `  • Средняя цена: ${skuStats.avgPrice.toFixed(2)} ₽\\n`;\n    message += `  • Сумма: ${skuStats.totalRevenue.toFixed(2)} ₽\\n\\n`;\n  });\n\n  message += `<b>ИТОГО:</b>\\n`;\n  message += `  • Всего заказов: ${stats.totalOrders}\\n`;\n  message += `  • Всего отмен: ${stats.totalCancellations}\\n`;\n  message += `  • Общая сумма: ${stats.totalRevenue.toFixed(2)} ₽\\n`;\n\n  return message;\n}\n\n// Main execution\nconst parsedData = $input.first().json;\nconst date = $json.selectedDate || parsedData.availableDates[0];\nconst startTime = $json.startTime || '00:00';\nconst endTime = $json.endTime || '23:59';\n\nconst stats = calculateStatistics(parsedData.records, date, startTime, endTime);\nconst message = formatStatisticsMessage(stats);\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: message,\n    stats: stats,\n    parsed_data: parsedData\n  }\n}];"
+        "jsCode": "// Вставить сверху (перед filterRecordsByDateTime):\nfunction parseAsMsk(dateStr) {\n  if (!dateStr) return null;\n  let d = dateStr;\n  // '2025-09-30 07:40:08' -> '2025-09-30T07:40:08Z' (как в Parse CSV)\n  if (/^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$/.test(d)) {\n    d = d.replace(' ', 'T') + 'Z';\n  }\n  const base = new Date(d);\n  if (isNaN(base)) return null;\n  // приводим к МСК (+3ч)\n  return new Date(base.getTime() + 3 * 60 * 60 * 1000);\n}\n\nfunction filterRecordsByDateTime(records, datesOrOne, startTime, endTime) {\n  const dates = Array.isArray(datesOrOne) ? datesOrOne : [datesOrOne];\n  const set = new Set(dates.filter(Boolean));\n  return records.filter(record => {\n    const mskDate = parseAsMsk(record.created_at);\n    if (!mskDate) return false;\n    const recordDateStr = mskDate.toISOString().split('T')[0];\n    if (!set.has(recordDateStr)) return false;\n    const recordTimeStr = mskDate.toTimeString().split(' ')[0].substring(0, 5);\n    return recordTimeStr >= startTime && recordTimeStr <= endTime;\n  });\n}\n\nfunction calculateStatistics(records, datesOrOne, startTime, endTime) {\n  const filteredRecords = filterRecordsByDateTime(records, datesOrOne, startTime, endTime);\n  \n  if (filteredRecords.length === 0) {\n    return {\n      date: datesOrOne, startTime, endTime,\n      totalOrders: 0,\n      totalCancellations: 0,\n      totalRevenue: 0,\n      skuStats: {},\n      message: 'Нет данных за указанный период'\n    };\n  }\n\n  const statsBySku = {};\n  const revenueStatuses = ['доставлен', 'доставляется', 'ожидает сборки', 'ожидает отгрузки'];\n  const cancelStatuses = ['отменён', 'отменен', 'возврат'];\n\n  filteredRecords.forEach(record => {\n    const sku = record.sku;\n    const status = record.status.toLowerCase();\n    const quantity = record.quantity || 1;\n    const price = record.price || 0;\n    \n    if (!statsBySku[sku]) {\n      statsBySku[sku] = {\n        totalOrders: 0,\n        cancellations: 0,\n        totalRevenue: 0,\n        weightedPriceSum: 0,\n        weightedQuantitySum: 0,\n        avgPrice: 0\n      };\n    }\n    \n    statsBySku[sku].totalOrders += quantity;\n    \n    if (cancelStatuses.some(s => status.includes(s))) {\n      statsBySku[sku].cancellations += quantity;\n    }\n    \n    if (revenueStatuses.some(s => status.includes(s))) {\n      statsBySku[sku].totalRevenue += price * quantity;\n      statsBySku[sku].weightedPriceSum += price * quantity;\n      statsBySku[sku].weightedQuantitySum += quantity;\n    }\n  });\n\n  Object.keys(statsBySku).forEach(sku => {\n    const stats = statsBySku[sku];\n    if (stats.weightedQuantitySum > 0) {\n      stats.avgPrice = stats.weightedPriceSum / stats.weightedQuantitySum;\n    }\n  });\n\n  let totalOrders = 0, totalCancellations = 0, totalRevenue = 0;\n  Object.values(statsBySku).forEach(stats => {\n    totalOrders += stats.totalOrders;\n    totalCancellations += stats.cancellations;\n    totalRevenue += stats.totalRevenue;\n  });\n\n  return { date: datesOrOne, startTime, endTime, totalOrders, totalCancellations, totalRevenue, skuStats: statsBySku };\n}\n\nfunction formatStatisticsMessage(stats) {\n  let message = `📊 <b>Статистика заказов</b>\\n\\n`;\n  const datesLabel = Array.isArray(stats.date) ? stats.date.join(', ') : stats.date;\n  message += `📅 Даты: ${datesLabel}\\n`;\n  message += `⏰ Время: ${stats.startTime} - ${stats.endTime}\\n\\n`;\n\n  if (stats.totalOrders === 0) {\n    message += stats.message || 'Нет данных';\n    return message;\n  }\n\n  const sortedSkus = Object.keys(stats.skuStats).sort();\n  sortedSkus.forEach(sku => {\n    const skuStats = stats.skuStats[sku];\n    message += `<b>${sku}</b>\\n`;\n    message += `  • Заказов: ${skuStats.totalOrders}\\n`;\n    message += `  • Отмен: ${skuStats.cancellations}\\n`;\n    message += `  • Средняя цена: ${skuStats.avgPrice.toFixed(2)} ₽\\n`;\n    message += `  • Сумма: ${skuStats.totalRevenue.toFixed(2)} ₽\\n\\n`;\n  });\n\n  message += `<b>ИТОГО:</b>\\n`;\n  message += `  • Всего заказов: ${stats.totalOrders}\\n`;\n  message += `  • Всего отмен: ${stats.totalCancellations}\\n`;\n  message += `  • Общая сумма: ${stats.totalRevenue.toFixed(2)} ₽\\n`;\n\n  return message;\n}\n\n// Main execution\nconst parsedData = $input.first().json;\nconst datesOrOne = ($json.selectedDates && $json.selectedDates.length)\n  ? $json.selectedDates\n  : ($json.selectedDate || parsedData.availableDates[0]);\nconst startTime = $json.startTime || '00:00';\nconst endTime = $json.endTime || '23:59';\n\nconst stats = calculateStatistics(parsedData.records, datesOrOne, startTime, endTime);\nconst message = formatStatisticsMessage(stats);\n\nreturn [{\n  json: {\n    chat_id: parsedData.chat_id,\n    text: message,\n    stats: stats,\n    parsed_data: parsedData\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -537,7 +585,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Address inputs by index with fallback for compatibility\nconst fromPort0 = $input.all(0); // Date selection from Handle Date Callback\nconst fromPort1 = $input.all(1); // Cached data from Get Cached Data\nconst dateSelection = (fromPort0[0]?.json) || $input.first().json;\nconst cachedRaw = (fromPort1[0]?.json?.value) ?? $input.last().json?.value;\n\nlet cachedData = {};\ntry {\n  cachedData = cachedRaw ? JSON.parse(cachedRaw) : {};\n} catch (e) {\n  cachedData = {};\n}\n\nreturn [{\n  json: {\n    ...cachedData,\n    selectedDate: dateSelection.selectedDate,\n    startTime: dateSelection.startTime,\n    endTime: dateSelection.endTime,\n    chat_id: dateSelection.chat_id,\n  }\n}];"
+        "jsCode": "// Address inputs by index with fallback for compatibility\nconst fromPort0 = $input.all(0); // Date selection (done)\nconst fromPort1 = $input.all(1); // Cached data\nconst sel = (fromPort0[0]?.json) || $input.first().json;\nconst cachedRaw = (fromPort1[0]?.json?.value) ?? $input.last().json?.value;\n\nlet cachedData = {};\ntry { cachedData = cachedRaw ? JSON.parse(cachedRaw) : {}; } catch (e) { cachedData = {}; }\n\nreturn [{\n  json: {\n    ...cachedData,\n    selectedDates: sel.selectedDates,\n    startTime: sel.startTime,\n    endTime: sel.endTime,\n    chat_id: sel.chat_id,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -739,6 +787,178 @@
           "name": "Tg Ozon.Orders bot"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:selected_dates",
+        "propertyName": "value"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        520
+      ],
+      "id": "get-selected-dates",
+      "name": "Get Selected Dates",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=ozon:cache:{{ $json.user_id }}:selected_dates",
+        "value": "={{ JSON.stringify($json.selectedDates || []) }}",
+        "options": {
+          "ttl": 3600
+        }
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2300,
+        520
+      ],
+      "id": "persist-selected-dates",
+      "name": "Persist Selected Dates",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
+        "propertyName": "value"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        2500,
+        520
+      ],
+      "id": "fetch-csv-meta",
+      "name": "Fetch Cached CSV Meta",
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dateStr = $('Extract User Data').first().json.callback_data.replace('date:', '');\nconst userId = $('Extract User Data').first().json.user_id;\nlet selected = [];\ntry {\n  const raw = $('Get Selected Dates').first().json.value;\n  selected = raw ? JSON.parse(raw) : [];\n} catch(e){ selected = []; }\n\nconst MAX = 3;\nif (selected.includes(dateStr)) {\n  selected = selected.filter(d => d !== dateStr);\n  return [{ json: { user_id: userId, selectedDates: selected, hitLimit: false } }];\n}\nif (selected.length >= MAX) {\n  return [{ json: { user_id: userId, selectedDates: selected, hitLimit: true } }];\n}\nselected.push(dateStr);\nreturn [{ json: { user_id: userId, selectedDates: selected, hitLimit: false } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        520
+      ],
+      "id": "toggle-date",
+      "name": "Toggle Date"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { selectedDates: [], user_id: $('Extract User Data').first().json.user_id } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        620
+      ],
+      "id": "reset-dates",
+      "name": "Reset Dates"
+    },
+    {
+      "parameters": {
+        "jsCode": "const userId = $('Extract User Data').first().json.user_id;\nlet selected = [];\ntry {\n  const raw = $('Get Selected Dates').first().json.value;\n  selected = raw ? JSON.parse(raw) : [];\n} catch(e){ selected = []; }\n\nif (!selected.length) {\n  return [{ json: { needSelect: true } }];\n}\n\nreturn [{\n  json: {\n    selectedDates: selected,\n    user_id: userId,\n    chat_id: $('Extract User Data').first().json.chat_id,\n    startTime: '00:00',\n    endTime: '23:59'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        700
+      ],
+      "id": "handle-dates-done",
+      "name": "Handle Done"
+    },
+    {
+      "parameters": {
+        "jsCode": "const chatId = $('Extract User Data').first().json.chat_id;\nlet available = [];\ntry {\n  const raw = $('Fetch Cached CSV Meta').first().json.value;\n  const obj = raw ? JSON.parse(raw) : {};\n  available = Array.isArray(obj.availableDates) ? obj.availableDates : [];\n} catch(e){ available = []; }\n\nconst selected = $json.selectedDates || [];\nconst selectedLine = selected.length ? `Выбрано: ${selected.join(', ')}` : 'Выберите до 3 дат:';\n\nconst rows = available.map(d => ([{\n  text: (selected.includes(d) ? '☑ ' : '▫ ') + d,\n  callback_data: `date:${d}`\n}]));\n\nconst controls = [];\nif (selected.length > 0) {\n  controls.push({ text: '✅ Готово', callback_data: 'dates:done' });\n} else {\n  controls.push({ text: '🔒 Готово', callback_data: 'noop' });\n}\ncontrols.push({ text: '🗑 Сброс', callback_data: 'dates:reset' });\n\nconst keyboard = { inline_keyboard: [...rows, controls] };\n\nreturn [{ json: { chat_id: chatId, text: `📅 Мультивыбор дат\\n\\n${selectedLine}`, reply_markup: keyboard } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2700,
+        520
+      ],
+      "id": "render-multi-date-kb",
+      "name": "Render Multi-Date Keyboard"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2900,
+        520
+      ],
+      "id": "send-multi-date-kb",
+      "name": "Send Multi-Date Keyboard"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": {{ JSON.stringify($('Extract User Data').first().json.callback_query_id) }},\n  \"text\": \"Можно выбрать не более 3 дат\",\n  \"show_alert\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2300,
+        620
+      ],
+      "id": "answer-callback-limit",
+      "name": "Answer Callback (limit)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": {{ JSON.stringify($('Extract User Data').first().json.callback_query_id) }},\n  \"text\": \"Выберите хотя бы одну дату\",\n  \"show_alert\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2300,
+        760
+      ],
+      "id": "answer-callback-need-select",
+      "name": "Answer Callback (needSelect)"
     }
   ],
   "connections": {
@@ -829,7 +1049,7 @@
         ],
         [
           {
-            "node": "Handle Date Callback",
+            "node": "Get Selected Dates",
             "type": "main",
             "index": 0
           }
@@ -844,6 +1064,20 @@
         [
           {
             "node": "Generate Main Menu",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Selected Dates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reset Dates",
             "type": "main",
             "index": 0
           }
@@ -1075,6 +1309,83 @@
         [
           {
             "node": "Extract from File (XLSX)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Selected Dates": {
+      "main": [
+        [
+          {
+            "node": "Toggle Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Toggle Date": {
+      "main": [
+        [
+          {
+            "node": "Persist Selected Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Persist Selected Dates": {
+      "main": [
+        [
+          {
+            "node": "Fetch Cached CSV Meta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Cached CSV Meta": {
+      "main": [
+        [
+          {
+            "node": "Render Multi-Date Keyboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Render Multi-Date Keyboard": {
+      "main": [
+        [
+          {
+            "node": "Send Multi-Date Keyboard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reset Dates": {
+      "main": [
+        [
+          {
+            "node": "Persist Selected Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handle Done": {
+      "main": [
+        [
+          {
+            "node": "Get Cached Data",
             "type": "main",
             "index": 0
           }
