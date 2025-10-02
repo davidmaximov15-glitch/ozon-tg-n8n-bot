@@ -861,7 +861,7 @@
       "parameters": {
         "operation": "set",
         "key": "=ozon:sess:{{ $json.user_id }}:dates",
-        "value": "={{ JSON.stringify($json.selectedDates || []) }}",
+        "value": "={{ JSON.stringify([]) }}",
         "options": {
           "ttl": 86400
         }
