@@ -671,7 +671,7 @@
     {
       "parameters": {
         "operation": "set",
-        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $json.user_id }}:csv",
         "value": "={{ JSON.stringify({ reportType: $json.reportType, records: $json.records, availableDates: $json.availableDates, totalRecords: $json.totalRecords }) }}",
         "options": {
           "ttl": 3600
@@ -708,7 +708,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -729,7 +729,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:selected_dates",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -793,7 +793,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -814,7 +814,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:selected_dates",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -878,7 +878,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:selected_dates",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -912,7 +912,7 @@
     {
       "parameters": {
         "operation": "set",
-        "key": "=ozon:cache:{{ $json.user_id }}:selected_dates",
+        "key": "=ozon:sess:{{ $json.user_id }}:dates",
         "value": "={{ JSON.stringify($json.selectedDates || []) }}",
         "options": {
           "ttl": 3600
@@ -953,7 +953,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -987,7 +987,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -1051,7 +1051,7 @@
     {
       "parameters": {
         "operation": "set",
-        "key": "=ozon:cache:{{ $json.user_id }}:selected_dates",
+        "key": "=ozon:sess:{{ $json.user_id }}:dates",
         "value": "={{ JSON.stringify($json.selectedDates || []) }}",
         "options": {
           "ttl": 3600
@@ -1092,7 +1092,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:selected_dates",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -1126,7 +1126,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $json.user_id }}:csv",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -1234,7 +1234,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -1268,7 +1268,7 @@
     {
       "parameters": {
         "operation": "get",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:csv_data",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
         "propertyName": "value"
       },
       "type": "n8n-nodes-base.redis",
@@ -1406,7 +1406,7 @@
     {
       "parameters": {
         "operation": "delete",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:csv_data"
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -1426,7 +1426,7 @@
     {
       "parameters": {
         "operation": "delete",
-        "key": "=ozon:cache:{{ $('Extract User Data').first().json.user_id }}:selected_dates"
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -1786,7 +1786,7 @@
     {
       "parameters": {
         "operation": "delete",
-        "key": "=ozon:cache:{{ $json.user_id }}:csv_data"
+        "key": "=ozon:sess:{{ $json.user_id }}:csv"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -1806,7 +1806,7 @@
     {
       "parameters": {
         "operation": "delete",
-        "key": "=ozon:cache:{{ $json.user_id }}:selected_dates"
+        "key": "=ozon:sess:{{ $json.user_id }}:dates"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
@@ -1826,7 +1826,7 @@
     {
       "parameters": {
         "operation": "delete",
-        "key": "=ozon:cache:{{ $json.user_id }}:calendar_msg_id"
+        "key": "=ozon:ui:{{ $json.user_id }}:calendar_msg_id"
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
