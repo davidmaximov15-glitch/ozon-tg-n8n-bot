@@ -85,7 +85,10 @@
     {
       "parameters": {
         "operation": "csv",
-        "options": {}
+        "options": {
+          "delimiter": ";",
+          "relaxQuotes": true
+        }
       },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
