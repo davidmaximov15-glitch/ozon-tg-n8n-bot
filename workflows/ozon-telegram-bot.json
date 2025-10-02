@@ -509,7 +509,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const dateSelection = $input.first().json;\nconst cachedData = JSON.parse($input.last().json.value || '{}');\n\nreturn [{\n  json: {\n    ...cachedData,\n    selectedDate: dateSelection.selectedDate,\n    startTime: dateSelection.startTime,\n    endTime: dateSelection.endTime,\n    chat_id: dateSelection.chat_id\n  }\n}];"
+        "jsCode": "// Address inputs by index with fallback for compatibility\nconst fromPort0 = $input.all(0); // Date selection from Handle Date Callback\nconst fromPort1 = $input.all(1); // Cached data from Get Cached Data\nconst dateSelection = (fromPort0[0]?.json) || $input.first().json;\nconst cachedRaw = (fromPort1[0]?.json?.value) ?? $input.last().json?.value;\n\nlet cachedData = {};\ntry {\n  cachedData = cachedRaw ? JSON.parse(cachedRaw) : {};\n} catch (e) {\n  cachedData = {};\n}\n\nreturn [{\n  json: {\n    ...cachedData,\n    selectedDate: dateSelection.selectedDate,\n    startTime: dateSelection.startTime,\n    endTime: dateSelection.endTime,\n    chat_id: dateSelection.chat_id,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
