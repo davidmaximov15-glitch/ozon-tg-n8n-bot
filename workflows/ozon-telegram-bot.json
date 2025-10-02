@@ -453,7 +453,7 @@
       "parameters": {
         "operation": "set",
         "key": "=ozon:cache:{{ $json.user_id }}:csv_data",
-        "value": "={{ JSON.stringify($json) }}",
+        "value": "={{ JSON.stringify({ reportType: $json.reportType, records: $json.records, availableDates: $json.availableDates, totalRecords: $json.totalRecords }) }}",
         "options": {
           "ttl": 3600
         }
