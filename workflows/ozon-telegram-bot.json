@@ -567,7 +567,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2240,
+        2460,
         160
       ],
       "id": "n-prep-menuresp",
@@ -584,7 +584,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2440,
+        2680,
         160
       ],
       "id": "n-send-menuresp",
@@ -702,7 +702,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        3260,
+        3380,
         240
       ],
       "id": "n-fetch-csv",
@@ -723,7 +723,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        3260,
+        3380,
         320
       ],
       "id": "n-get-selected",
@@ -1049,8 +1049,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2060,
-        120
+        2160,
+        160
       ],
       "id": "get-csv-meta-for-orders",
       "name": "Get CSV Meta (Menu)",
@@ -1322,7 +1322,7 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        3480,
+        3560,
         240
       ],
       "id": "get-month-render-smart",
