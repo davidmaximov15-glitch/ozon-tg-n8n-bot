@@ -2061,13 +2061,7 @@
     },
     "Fetch CSV Meta (for calendar)": {
       "main": [
-        [
-          {
-            "node": "Get Selected Dates",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Get Selected Dates": {
@@ -2378,6 +2372,16 @@
             "node": "Get Month (Render smart)",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Fetch CSV Meta (for calendar)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Selected Dates",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -2482,7 +2486,13 @@
             "index": 0
           }
         ],
-        []
+        [
+          {
+            "node": "Persist Selected Dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Compute Selection Summary": {
