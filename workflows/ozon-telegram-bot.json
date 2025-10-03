@@ -1835,7 +1835,7 @@
       "main": [
         [
           {
-            "node": "Validate Whitelist",
+            "node": "Check Admin",
             "type": "main",
             "index": 0
           }
@@ -1857,7 +1857,7 @@
       "main": [
         [
           {
-            "node": "Check Admin",
+            "node": "Route Message",
             "type": "main",
             "index": 0
           }
@@ -1875,7 +1875,7 @@
       "main": [
         [
           {
-            "node": "Route Message",
+            "node": "Validate Whitelist",
             "type": "main",
             "index": 0
           }
