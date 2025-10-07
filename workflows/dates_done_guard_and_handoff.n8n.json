@@ -1,0 +1,126 @@
+{
+  "name": "dates_done_guard_and_handoff",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// Проверяем, действительно ли пришёл dates:done\nconst { callback_data, user_id, chat_id, callback_query_id } = $('Extract User Data').first().json || {};\nreturn [{ json: { isDone: callback_data === 'dates:done', user_id, chat_id, callback_query_id } }];"
+      },
+      "id": "check_done",
+      "name": "Check dates:done",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-900, 200]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv"
+      },
+      "id": "get_session",
+      "name": "Get Session (csv)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } },
+      "position": [-660, 80]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates"
+      },
+      "id": "get_selected",
+      "name": "Get Selected Dates",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } },
+      "position": [-660, 320]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Валидируем сессию и выбор дат\nlet sess={}; try{ const raw=$('Get Session (csv)').first().json.value; sess = raw? JSON.parse(raw):{}; }catch(e){ sess={}; }\nlet dates=[]; try{ const raw=$('Get Selected Dates').first().json.value; dates = raw? JSON.parse(raw):[]; }catch(e){ dates=[]; }\nconst hasSession = !!(sess && sess.from && sess.to && Array.isArray(sess.months));\nconst hasAtLeastOne = Array.isArray(dates) && dates.length > 0;\nreturn [{ json: { hasSession, hasAtLeastOne, session: sess, selectedDates: dates } }];"
+      },
+      "id": "validate",
+      "name": "Validate Session & Selection",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-420, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "typeValidation": "strict", "version": 2 },
+          "conditions": [
+            { "leftValue": "={{ $json.hasSession }}", "rightValue": "true", "operator": { "type": "boolean", "operation": "true", "singleValue": true } },
+            { "leftValue": "={{ $json.hasAtLeastOne }}", "rightValue": "true", "operator": { "type": "boolean", "operation": "true", "singleValue": true } }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if_can_proceed",
+      "name": "Can Proceed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-180, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": {{ JSON.stringify($('Extract User Data').first().json.callback_query_id) }},\n  \"text\": \"Выберите хотя бы одну дату\",\n  \"show_alert\": false\n}",
+        "options": {}
+      },
+      "id": "answer_need_dates",
+      "name": "AnswerCallback (need at least 1)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [60, 80]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Подготовка входа для движка статистики (Коммит №7)\nconst base = $('Extract User Data').first().json || {};\nconst { user_id, chat_id } = base;\nconst { session, selectedDates } = $json;\nreturn [{ json: { user_id, chat_id, selectedDates, session } }];"
+      },
+      "id": "prepare_stats_input",
+      "name": "Prepare Stats Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [60, 300]
+    },
+    {
+      "parameters": {
+        "workflowId": "orders_stats_engine",
+        "options": {}
+      },
+      "id": "call_stats_engine",
+      "name": "Call Orders Stats Engine",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [320, 300]
+    }
+  ],
+  "connections": {
+    "Check dates:done": {
+      "main": [
+        [
+          { "node": "Get Session (csv)", "type": "main", "index": 0 },
+          { "node": "Get Selected Dates", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Get Session (csv)": { "main": [ [ { "node": "Validate Session & Selection", "type": "main", "index": 0 } ] ] },
+    "Get Selected Dates": { "main": [ [ { "node": "Validate Session & Selection", "type": "main", "index": 0 } ] ] },
+    "Validate Session & Selection": { "main": [ [ { "node": "Can Proceed?", "type": "main", "index": 0 } ] ] },
+    "Can Proceed?": {
+      "main": [
+        [ { "node": "AnswerCallback (need at least 1)", "type": "main", "index": 0 } ],
+        [ { "node": "Prepare Stats Input", "type": "main", "index": 0 } ]
+      ]
+    },
+    "Prepare Stats Input": { "main": [ [ { "node": "Call Orders Stats Engine", "type": "main", "index": 0 } ] ] }
+  },
+  "pinData": {},
+  "active": false
+}
