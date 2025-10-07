@@ -1,0 +1,71 @@
+{
+  "name": "calendar_ui_header_and_counters",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv"
+      },
+      "id": "fetch_session",
+      "name": "Fetch Session (csv)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } },
+      "position": [-560, 120]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates"
+      },
+      "id": "fetch_selected",
+      "name": "Get Selected Dates",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": { "redis": { "id": "kaA0Glj8bB5pwqRt", "name": "Redis account" } },
+      "position": [-560, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Подготовка модели\nconst chat_id = $('Extract User Data').first().json.chat_id;\nconst user_id = $('Extract User Data').first().json.user_id;\nlet sess={}; try{ const raw=$('Fetch Session (csv)').first().json.value; sess = raw? JSON.parse(raw):{}; }catch(e){ sess={}; }\nconst { from, to, months=[], daysByMonth={} } = sess||{};\nlet month  = $('Ensure Month (smart)').first()?.json?.month || $('Calc Initial Month').first()?.json?.month || months[0];\nlet minMonth = $('Ensure Month (smart)').first()?.json?.minMonth || $('Calc Initial Month').first()?.json?.minMonth || months[0];\nlet maxMonth = $('Ensure Month (smart)').first()?.json?.maxMonth || $('Calc Initial Month').first()?.json?.maxMonth || months[months.length-1];\nif(!month){ month=months[0]; }\nlet selected=[]; try{ const raw=$('Get Selected Dates').first()?.json?.value; selected = raw? JSON.parse(raw):[]; }catch(e){ selected=[]; }\nconst availDays = new Set((daysByMonth[month]||[]).map(d => `${month}-${String(d).padStart(2,'0')}`));\nreturn [{ json: { chat_id, user_id, from, to, month, minMonth, maxMonth, selectedDates: selected, availDays: Array.from(availDays) } }];"
+      },
+      "id": "prepare_model",
+      "name": "Prepare Calendar Model",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-280, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "function daysInMonth(ym){ const [y,m]=ym.split('-').map(Number); return new Date(y, m, 0).getDate(); }\nconst { chat_id, from, to, month, minMonth, maxMonth, selectedDates=[], availDays=[] } = $json;\nconst setAvail = new Set(availDays);\nconst setSel   = new Set(Array.isArray(selectedDates)? selectedDates: []);\nconst total = daysInMonth(month);\nconst hasPrev = month > minMonth;\nconst hasNext = month < maxMonth;\n// ======= HEADER =======\nconst headerLines = [];\nheaderLines.push('📅 <b>Даты по отчёту</b>');\nheaderLines.push(`Загружено: <b>${from||'-'}</b> — <b>${to||'-'}</b>`);\nheaderLines.push(`Месяц: <b>${month}</b>`);\nheaderLines.push('— Нажмите на доступные дни, затем «Готово».');\n// ======= GRID (7×5) =======\nconst navRow = [\n  { text: hasPrev ? '◀' : '▪', callback_data: hasPrev ? `cal:${month}:prev` : 'noop' },\n  { text: month,                callback_data: 'noop' },\n  { text: hasNext ? '▶' : '▪',  callback_data: hasNext ? `cal:${month}:next` : 'noop' }\n];\nconst rows = [];\nlet day=1; const totalDays = total; const rowLen=7;\nwhile(day<=totalDays){\n  const row=[];\n  for(let i=0;i<rowLen;i++){\n    if(day>totalDays){ row.push({ text:'▫', callback_data:'noop' }); continue; }\n    const dd = String(day).padStart(2,'0');\n    const full = `${month}-${dd}`;\n    const isAvail = setAvail.has(full);\n    const isSel   = setSel.has(full);\n    if(isAvail){ row.push({ text: (isSel? `☑ ${dd}` : `▫ ${dd}`), callback_data: `date:${full}` }); }\n    else{ row.push({ text: `• ${dd}`, callback_data: 'noop' }); }\n    day++;\n  }\n  rows.push(row);\n}\n// ======= ACTIONS & FOOTER =======\nconst count = setSel.size; const maxSel = 3;\nconst selList = count? Array.from(setSel).join(', ') : '—';\nconst footerLines = [];\nfooterLines.push(`Выбрано: ${selList} (${count}/${maxSel})`);\nconst actionRow = [ { text: '✅ Готово', callback_data: 'dates:done' }, { text: '↺ Сброс', callback_data: 'dates:reset' } ];\nconst reply_markup = { inline_keyboard: [ navRow, ...rows, actionRow ] };\nconst text = headerLines.join('\\n') + '\\n\\n' + footerLines.join('\\n');\nreturn [{ json: { chat_id, text, reply_markup, parse_mode: 'HTML' } }];"
+      },
+      "id": "render_grid_with_header",
+      "name": "Render Grid + Header/Counter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [40, 200]
+    },
+    {
+      "parameters": {
+        "workflowId": "ui_orchestrator (send-or-edit)",
+        "options": {},
+        "jsonParameters": true
+      },
+      "id": "call_ui_orchestrator",
+      "name": "UI Orchestrator (send-or-edit)",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1,
+      "position": [300, 200]
+    }
+  ],
+  "connections": {
+    "Fetch Session (csv)": { "main": [ [ { "node": "Prepare Calendar Model", "type": "main", "index": 0 } ] ] },
+    "Get Selected Dates": { "main": [ [ { "node": "Prepare Calendar Model", "type": "main", "index": 0 } ] ] },
+    "Prepare Calendar Model": { "main": [ [ { "node": "Render Grid + Header/Counter", "type": "main", "index": 0 } ] ] },
+    "Render Grid + Header/Counter": { "main": [ [ { "node": "UI Orchestrator (send-or-edit)", "type": "main", "index": 0 } ] ] }
+  },
+  "pinData": {},
+  "active": false
+}
