@@ -1,0 +1,232 @@
+{
+  "name": "unified_router_messages",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f6a7b8c9-0001-0000-0000-000000000001",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [-1040, 200]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/* INPUT: { context:{ user_id, chat_id, message_text } }\n   OUTPUT: { route, context }\n*/\nconst ctx = $input.first().json.context || $input.first().json || {};\nconst text = String((ctx.message_text || ctx.messageText || '').trim()).toLowerCase();\n\nfunction route() {\n  if (!text) return { route: 'noop' };\n  \n  if (text === '/start' || text === 'start') return { route: 'menu:orders' };\n  if (text.includes('заказ') || text === '/orders') return { route: 'menu:orders' };\n  if (text.includes('календар') || text === '/calendar') return { route: 'menu:calendar' };\n  if (text.includes('очист') || text === '/clear') return { route: 'file:clear' };\n  if (text.includes('upload') || text.includes('csv') || text === '/upload') return { route: 'menu:upload' };\n  \n  return { route: 'unknown' };\n}\n\nconst parsed = route();\n\nreturn {\n  json: {\n    route: parsed.route,\n    context: ctx\n  }\n};"
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000002",
+      "name": "Parse message_text",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-820, 200]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "=menu:orders",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000003",
+      "name": "route == menu:orders",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-560, 140]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "=menu:calendar",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000004",
+      "name": "route == menu:calendar",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-560, 240]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "1",
+              "leftValue": "={{ $json.route }}",
+              "rightValue": "=file:clear",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000005",
+      "name": "route == file:clear",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [-560, 340]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.id }}",
+        "options": {}
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000006",
+      "name": "→ orders_menu_render",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [-320, 140]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.id }}",
+        "options": {}
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000007",
+      "name": "→ calendar_ui_header",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [-320, 240]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.id }}",
+        "options": {}
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000008",
+      "name": "→ files_session_clear",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [-320, 340]
+    },
+    {
+      "parameters": {
+        "content": "## Unified Router: Messages\n\nЦентрализованный роутинг для текстовых команд.\n\nКоманды:\n- /start, \"заказы\" → menu:orders\n- \"календарь\", /calendar → menu:calendar\n- \"очистить\", /clear → file:clear\n- \"upload\", \"csv\" → menu:upload\n\nНаправляет в соответствующие sub-workflows.",
+        "height": 260,
+        "width": 360
+      },
+      "id": "f6a7b8c9-0001-0000-0000-000000000099",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-1040, -80]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse message_text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse message_text": {
+      "main": [
+        [
+          {
+            "node": "route == menu:orders",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "route == menu:calendar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "route == file:clear",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route == menu:orders": {
+      "main": [
+        [
+          {
+            "node": "→ orders_menu_render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route == menu:calendar": {
+      "main": [
+        [
+          {
+            "node": "→ calendar_ui_header",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "route == file:clear": {
+      "main": [
+        [
+          {
+            "node": "→ files_session_clear",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-10-07T00:00:00.000Z",
+  "versionId": "00000000-0000-0000-0000-000000000001"
+}
