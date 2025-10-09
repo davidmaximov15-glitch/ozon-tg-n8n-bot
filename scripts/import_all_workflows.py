@@ -42,11 +42,9 @@ def import_workflow(filepath):
     clean_workflow = {
         'name': workflow_data['name'],
         'nodes': workflow_data['nodes'],
-        'connections': workflow_data['connections']
+        'connections': workflow_data['connections'],
+        'settings': workflow_data.get('settings', {})  # settings обязателен для n8n API
     }
-    
-    if 'settings' in workflow_data and workflow_data['settings']:
-        clean_workflow['settings'] = workflow_data['settings']
     
     response = requests.post(
         f"{API_URL}/workflows",
