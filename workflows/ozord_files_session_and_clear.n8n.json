@@ -1,0 +1,310 @@
+{
+  "name": "ozord_files_session_and_clear",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "/* INPUT: expects\n   - user_id, chat_id (из Extract User Data)\n   - meta: объект с availableDates[], totalRecords?, csv_key?\n   Пример meta.availableDates: [\"2025-09-18\",\"2025-10-01\", ...]\n*/\nconst user_id = $('Extract User Data').first().json.user_id;\nlet meta = {};\ntry {\n  meta = $('Parse Report File').first().json || {};\n} catch(e) { meta = {}; }\nconst dates = Array.isArray(meta.availableDates) ? meta.availableDates : [];\nif (!dates.length) {\n  return [{ json: { user_id, session: null } }];\n}\n// from/to\nconst sorted = [...new Set(dates)].sort();\nconst from = sorted[0];\nconst to   = sorted[sorted.length - 1];\n// months\nconst months = Array.from(new Set(sorted.map(d => d.slice(0,7)))).sort();\n// daysByMonth\nconst daysByMonth = {};\nfor (const d of sorted) {\n  const ym = d.slice(0,7);\n  const dd = Number(d.slice(8,10));\n  if (!daysByMonth[ym]) daysByMonth[ym] = [];\n  daysByMonth[ym].push(dd);\n}\n// csv_key: оставляем/пробрасываем если есть в meta\nconst csv_key = meta.csv_key || `csv:${user_id}:${Date.now()}`;\nconst session = { csv_key, from, to, months, daysByMonth };\nreturn [{ json: { user_id, session } }];"
+      },
+      "id": "code_build_session",
+      "name": "Build File Session (from meta)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.session }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if_has_session",
+      "name": "Has Session?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -380,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv",
+        "value": "={{ JSON.stringify($json.session) }}"
+      },
+      "id": "redis_set_session",
+      "name": "Persist Session (ozon:sess:<uid>:csv)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        -140,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates"
+      },
+      "id": "redis_del_dates",
+      "name": "Del Selected Dates (reset)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        100,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=ozon:ui:{{ $('Extract User Data').first().json.user_id }}:calendar_msg_id"
+      },
+      "id": "redis_del_calendar_msg",
+      "name": "Del calendar_msg_id (reset)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        340,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Extract User Data').first().json.callback_data === 'file:clear' }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "if_is_clear",
+      "name": "Is file:clear?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -640,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:csv"
+      },
+      "id": "clear_csv",
+      "name": "Del csv (session)",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        -380,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=ozon:sess:{{ $('Extract User Data').first().json.user_id }}:dates"
+      },
+      "id": "clear_dates",
+      "name": "Del selected_dates",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        -380,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "key": "=ozon:ui:{{ $('Extract User Data').first().json.user_id }}:calendar_msg_id"
+      },
+      "id": "clear_calendar_msg_id",
+      "name": "Del calendar_msg_id",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        -380,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/answerCallbackQuery",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"callback_query_id\": {{ JSON.stringify($('Extract User Data').first().json.callback_query_id) }},\n  \"text\": \"Кэш очищен. Загрузите новый отчёт\",\n  \"show_alert\": false\n}"
+      },
+      "id": "answer_cleared",
+      "name": "AnswerCallback (cleared)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -120,
+        360
+      ]
+    }
+  ],
+  "connections": {
+    "Build File Session (from meta)": {
+      "main": [
+        [
+          {
+            "node": "Has Session?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Session?": {
+      "main": [
+        [
+          {
+            "node": "Persist Session (ozon:sess:<uid>:csv)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Persist Session (ozon:sess:<uid>:csv)": {
+      "main": [
+        [
+          {
+            "node": "Del Selected Dates (reset)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del Selected Dates (reset)": {
+      "main": [
+        [
+          {
+            "node": "Del calendar_msg_id (reset)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is file:clear?": {
+      "main": [
+        [
+          {
+            "node": "Del csv (session)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Del csv (session)": {
+      "main": [
+        [
+          {
+            "node": "Del selected_dates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del selected_dates": {
+      "main": [
+        [
+          {
+            "node": "Del calendar_msg_id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Del calendar_msg_id": {
+      "main": [
+        [
+          {
+            "node": "AnswerCallback (cleared)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false
+}

@@ -1,0 +1,288 @@
+{
+  "name": "ozord_ui_orchestrator (send-or-edit)",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const { chat_id, user_id, key = 'calendar', text, reply_markup, parse_mode = 'HTML' } = $json;\nconst uiKey = `ozon:ui:${user_id}:${key}:message_id`;\nreturn [{ json: { chat_id, user_id, key, uiKey, text, reply_markup, parse_mode } }];"
+      },
+      "id": "node_compute_keys",
+      "name": "Compute Redis Keys",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "value",
+        "key": "={{ $json.uiKey }}"
+      },
+      "id": "node_get_msg",
+      "name": "Redis Get UI Msg Id",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        -360,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ !!$json.value }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node_if_has",
+      "name": "Has Msg Id?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -120,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/editMessageText",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat_id, message_id: $('Redis Get UI Msg Id').first().json.value, text: $json.text, parse_mode: $json.parse_mode, reply_markup: $json.reply_markup }) }}"
+      },
+      "id": "node_edit",
+      "name": "Telegram editMessageText",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        120
+      ],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat_id, text: $json.text, parse_mode: $json.parse_mode, reply_markup: $json.reply_markup }) }}"
+      },
+      "id": "node_send",
+      "name": "Telegram sendMessage (fallback/new)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const e = $json;\n// Если edit прошёл, Telegram вернёт ok=true и message=null — message_id остаётся прежним\nif (e.body && e.body.ok === true) {\n  return [{ json: { mode: 'edited', message_id: $('Redis Get UI Msg Id').first().json.value } }];\n}\n// если edit вернул ошибку (например, message to edit not found) — идём в send\nreturn [{ json: { mode: 'need_send' } }];"
+      },
+      "id": "node_check_edit",
+      "name": "Check Edit Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        360,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.mode }}",
+              "rightValue": "need_send",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "node_if_fallback",
+      "name": "Edit Failed → Send?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        600,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $('Telegram sendMessage (fallback/new)').first().json }];"
+      },
+      "id": "node_wrap_send",
+      "name": "Wrap Send Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ $json.uiKey }}",
+        "value": "={{ $json.result ? $json.result.message_id : $json.message_id || $('Redis Get UI Msg Id').first().json.value }}"
+      },
+      "id": "node_set_msg",
+      "name": "Redis Set UI Msg Id",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "credentials": {
+        "redis": {
+          "id": "kaA0Glj8bB5pwqRt",
+          "name": "Redis account"
+        }
+      },
+      "position": [
+        1080,
+        220
+      ]
+    }
+  ],
+  "connections": {
+    "Compute Redis Keys": {
+      "main": [
+        [
+          {
+            "node": "Redis Get UI Msg Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Get UI Msg Id": {
+      "main": [
+        [
+          {
+            "node": "Has Msg Id?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Msg Id?": {
+      "main": [
+        [
+          {
+            "node": "Telegram editMessageText",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram sendMessage (fallback/new)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram editMessageText": {
+      "main": [
+        [
+          {
+            "node": "Check Edit Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Edit Result": {
+      "main": [
+        [
+          {
+            "node": "Edit Failed → Send?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Failed → Send?": {
+      "main": [
+        [
+          {
+            "node": "Telegram sendMessage (fallback/new)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Redis Set UI Msg Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram sendMessage (fallback/new)": {
+      "main": [
+        [
+          {
+            "node": "Wrap Send Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wrap Send Result": {
+      "main": [
+        [
+          {
+            "node": "Redis Set UI Msg Id",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "active": false
+}

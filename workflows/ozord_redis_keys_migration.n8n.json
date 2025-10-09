@@ -1,0 +1,135 @@
+{
+  "name": "ozord_redis_keys_migration",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "a1b2c3d4-0001-0000-0000-000000000001",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "migration_info",
+              "value": "=Add createdAt timestamps to existing Redis keys",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0000-0000-000000000002",
+      "name": "Migration Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "key_patterns",
+              "value": "=[\"files:*\", \"selectedDates:*\", \"message_id:*\"]",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a1b2c3d4-0001-0000-0000-000000000003",
+      "name": "Define Key Patterns",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Scan Redis keys and add createdAt if missing\nconst pattern = $input.item.json.key_patterns;\nconst now = Math.floor(Date.now() / 1000);\n\nreturn {\n  json: {\n    pattern: pattern,\n    createdAt: now,\n    migration_status: 'ready'\n  }\n};"
+      },
+      "id": "a1b2c3d4-0001-0000-0000-000000000004",
+      "name": "Scan & Prepare",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Redis Keys Migration\n\nAdds createdAt timestamp to:\n- files:*\n- selectedDates:*\n- message_id:*\n\nThis enables soft TTL cleanup.",
+        "height": 200,
+        "width": 300
+      },
+      "id": "a1b2c3d4-0001-0000-0000-000000000099",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -200
+      ]
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Migration Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Migration Config": {
+      "main": [
+        [
+          {
+            "node": "Define Key Patterns",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Key Patterns": {
+      "main": [
+        [
+          {
+            "node": "Scan & Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-10-07T00:00:00.000Z",
+  "versionId": "00000000-0000-0000-0000-000000000001"
+}

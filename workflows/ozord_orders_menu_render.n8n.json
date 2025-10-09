@@ -1,0 +1,164 @@
+{
+  "name": "ozord_orders_menu_render",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c3d4e5f6-0001-0000-0000-000000000001",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1",
+              "name": "user_id",
+              "value": "={{ $json.userId || $json.user_id }}",
+              "type": "string"
+            },
+            {
+              "id": "2",
+              "name": "chat_id",
+              "value": "={{ $json.chatId || $json.chat_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c3d4e5f6-0001-0000-0000-000000000002",
+      "name": "Extract User Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -600,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "key": "=ozon:sess:{{ $json.user_id }}:csv",
+        "options": {}
+      },
+      "id": "c3d4e5f6-0001-0000-0000-000000000003",
+      "name": "Get sess:csv",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        160
+      ],
+      "credentials": {
+        "redis": {
+          "id": "LbugIO49LKl0p0wh",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Build Orders menu UI\nconst ctx = $input.first().json;\nconst chat_id = ctx.chat_id;\nconst user_id = ctx.user_id;\n\nlet hasSession = false;\nlet from = null;\nlet to = null;\n\ntry {\n  const raw = ctx.value;\n  if (raw) {\n    const sess = JSON.parse(raw);\n    if (sess && sess.from && sess.to) {\n      hasSession = true;\n      from = sess.from;\n      to = sess.to;\n    }\n  }\n} catch (e) {\n  hasSession = false;\n}\n\n// Build buttons\nconst canOpenCalendar = hasSession;\nconst calBtn = canOpenCalendar\n  ? { text: '📅 Открыть календарь', callback_data: 'menu:calendar' }\n  : { text: '📅 Открыть календарь', callback_data: 'noop' };\n\nconst uploadBtn = { text: '📥 Загрузить CSV', callback_data: 'menu:upload' };\nconst clearBtn = { text: '🧹 Очистить файл', callback_data: 'file:clear' };\n\n// Build text\nconst lines = [];\nlines.push('📦 <b>Заказы</b>');\n\nif (hasSession) {\n  lines.push(`Загружено: <b>${from}</b> — <b>${to}</b>`);\n} else {\n  lines.push('Нет загруженного файла. Сначала загрузите отчёт.');\n}\n\nlines.push('— Загрузите отчёт, затем откройте календарь и выберите 1–3 даты.');\n\nconst text = lines.join('\\n');\nconst reply_markup = {\n  inline_keyboard: [\n    [calBtn],\n    [uploadBtn, clearBtn]\n  ]\n};\n\nreturn {\n  json: {\n    chat_id: chat_id,\n    user_id: user_id,\n    key: 'calendar',\n    text: text,\n    reply_markup: reply_markup,\n    parse_mode: 'HTML'\n  }\n};"
+      },
+      "id": "c3d4e5f6-0001-0000-0000-000000000004",
+      "name": "Build Orders UI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.id }}",
+        "options": {}
+      },
+      "id": "c3d4e5f6-0001-0000-0000-000000000005",
+      "name": "Call ui_orchestrator",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Orders Menu Render\n\nРисует меню «Заказы» с кнопками:\n- 📅 Открыть календарь (активна при наличии файла)\n- 📥 Загрузить CSV\n- 🧹 Очистить файл\n\nИспользует:\n- ozon:sess:<uid>:csv\n- ui_orchestrator для send-or-edit",
+        "height": 240,
+        "width": 320
+      },
+      "id": "c3d4e5f6-0001-0000-0000-000000000099",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        -60
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract User Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract User Data": {
+      "main": [
+        [
+          {
+            "node": "Get sess:csv",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get sess:csv": {
+      "main": [
+        [
+          {
+            "node": "Build Orders UI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Orders UI": {
+      "main": [
+        [
+          {
+            "node": "Call ui_orchestrator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "updatedAt": "2025-10-07T00:00:00.000Z",
+  "versionId": "00000000-0000-0000-0000-000000000001"
+}
