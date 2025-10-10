@@ -252,7 +252,11 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.id }}",
+        "workflowId": {
+          "__rl": true,
+          "value": "5rr4qcl6EhKmqU2Y",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "e5f6a7b8-0001-0000-0000-000000000010",
@@ -266,7 +270,11 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.id }}",
+        "workflowId": {
+          "__rl": true,
+          "value": "jY98upBVzlyy5IWI",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "e5f6a7b8-0001-0000-0000-000000000011",
@@ -280,7 +288,11 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.id }}",
+        "workflowId": {
+          "__rl": true,
+          "value": "yr11w5vNVacmw1JL",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "e5f6a7b8-0001-0000-0000-000000000012",
@@ -294,7 +306,11 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.id }}",
+        "workflowId": {
+          "__rl": true,
+          "value": "d8oh1GRJYCfmewOO",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "e5f6a7b8-0001-0000-0000-000000000013",
@@ -308,7 +324,11 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.id }}",
+        "workflowId": {
+          "__rl": true,
+          "value": "WZAncgLUdxNgw1UC",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "e5f6a7b8-0001-0000-0000-000000000014",
@@ -322,7 +342,11 @@
     },
     {
       "parameters": {
-        "workflowId": "={{ $workflow.id }}",
+        "workflowId": {
+          "__rl": true,
+          "value": "O4Oo5unMb4J5AKS9",
+          "mode": "id"
+        },
         "options": {}
       },
       "id": "e5f6a7b8-0001-0000-0000-000000000015",
