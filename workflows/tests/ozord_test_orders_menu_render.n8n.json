@@ -1,0 +1,170 @@
+{
+  "name": "ozord_test_orders_menu_render",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "test-orders-menu-render",
+        "options": {}
+      },
+      "id": "test-trigger-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        300
+      ],
+      "webhookId": "test-orders-menu-render"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Подготовка тестовых сценариев\nconst scenarios = [\n  {\n    name: \"Without session - should show 'No file' message\",\n    input: {\n      userId: \"test_user_123\",\n      chatId: \"test_user_123\"\n    },\n    mockRedis: {},\n    expectations: {\n      textContains: \"Нет загруженного файла\",\n      calendarButtonCallback: \"noop\",\n      hasUploadButton: true,\n      hasClearButton: true\n    }\n  },\n  {\n    name: \"With session - should show date range\",\n    input: {\n      userId: \"test_user_456\",\n      chatId: \"test_user_456\"\n    },\n    mockRedis: {\n      \"ozon:sess:test_user_456:csv\": JSON.stringify({\n        from: \"2025-01-01\",\n        to: \"2025-12-31\",\n        months: [\"2025-01\", \"2025-02\", \"2025-03\", \"2025-04\", \"2025-05\", \"2025-06\"],\n        availableDates: [\"2025-01-15\", \"2025-02-20\"]\n      })\n    },\n    expectations: {\n      textContains: \"Загружено:\",\n      textContains2: \"2025-01-01\",\n      textContains3: \"2025-12-31\",\n      calendarButtonCallback: \"menu:calendar\",\n      hasUploadButton: true,\n      hasClearButton: true\n    }\n  }\n];\n\nreturn scenarios.map(s => ({ json: s }));"
+      },
+      "id": "test-scenarios-001",
+      "name": "Define Test Scenarios",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Mock Redis operations\nconst scenario = $input.item.json;\nconst mockRedis = scenario.mockRedis || {};\n\n// Сохраняем mock Redis state в глобальную переменную\n// (это позволит другим нодам читать из \"Redis\")\nglobal.testRedisState = global.testRedisState || {};\nObject.assign(global.testRedisState, mockRedis);\n\nreturn { json: scenario.input };"
+      },
+      "id": "test-mock-redis-001",
+      "name": "Setup Mock Redis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "workflowId": "={{ $workflow.id }}",
+        "options": {}
+      },
+      "id": "test-execute-001",
+      "name": "Execute: orders_menu_render",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Capture output from workflow\nconst output = $input.item.json;\nconst scenario = $('Define Test Scenarios').item.json;\nconst expectations = scenario.expectations;\n\n// Run assertions\nconst assertions = [];\nlet allPassed = true;\n\n// Helper function\nfunction assert(check, condition, expected, actual) {\n  const passed = condition;\n  assertions.push({ check, passed, expected, actual });\n  if (!passed) allPassed = false;\n  return passed;\n}\n\n// Assertion 1: Text contains expected string\nif (expectations.textContains) {\n  const actual = output.text || \"\";\n  assert(\n    `Text contains '${expectations.textContains}'`,\n    actual.includes(expectations.textContains),\n    expectations.textContains,\n    actual\n  );\n}\n\n// Assertion 2: Additional text checks\nif (expectations.textContains2) {\n  const actual = output.text || \"\";\n  assert(\n    `Text contains '${expectations.textContains2}'`,\n    actual.includes(expectations.textContains2),\n    expectations.textContains2,\n    actual\n  );\n}\n\nif (expectations.textContains3) {\n  const actual = output.text || \"\";\n  assert(\n    `Text contains '${expectations.textContains3}'`,\n    actual.includes(expectations.textContains3),\n    expectations.textContains3,\n    actual\n  );\n}\n\n// Assertion 3: Calendar button callback_data\nif (expectations.calendarButtonCallback) {\n  const keyboard = output.reply_markup?.inline_keyboard || [];\n  const calendarButton = keyboard[0]?.[0];\n  const actual = calendarButton?.callback_data;\n  \n  assert(\n    `Calendar button callback_data is '${expectations.calendarButtonCallback}'`,\n    actual === expectations.calendarButtonCallback,\n    expectations.calendarButtonCallback,\n    actual\n  );\n}\n\n// Assertion 4: Has upload button\nif (expectations.hasUploadButton) {\n  const keyboard = output.reply_markup?.inline_keyboard || [];\n  const hasButton = keyboard.flat().some(btn => \n    btn.text && btn.text.includes('Загрузить')\n  );\n  \n  assert(\n    \"Has 'Загрузить CSV' button\",\n    hasButton,\n    true,\n    hasButton\n  );\n}\n\n// Assertion 5: Has clear button\nif (expectations.hasClearButton) {\n  const keyboard = output.reply_markup?.inline_keyboard || [];\n  const hasButton = keyboard.flat().some(btn => \n    btn.callback_data === 'file:clear'\n  );\n  \n  assert(\n    \"Has 'file:clear' button\",\n    hasButton,\n    true,\n    hasButton\n  );\n}\n\nreturn {\n  json: {\n    scenario: scenario.name,\n    passed: allPassed,\n    assertions,\n    output\n  }\n};"
+      },
+      "id": "test-assertions-001",
+      "name": "Run Assertions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Aggregate all scenario results\nconst items = $input.all();\nconst results = items.map(item => item.json);\n\nconst total = results.length;\nconst passed = results.filter(r => r.passed).length;\nconst failed = total - passed;\n\nreturn {\n  json: {\n    success: failed === 0,\n    total,\n    passed,\n    failed,\n    scenarios: results,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "test-format-001",
+      "name": "Format Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Test: orders_menu_render\n\nТестирует orders_menu_render workflow:\n- Сценарий 1: Без файла (должна быть неактивная кнопка)\n- Сценарий 2: С файлом (должен показать диапазон дат)\n\nЗапуск:\n- Через n8n API\n- Через Manual Trigger в n8n UI",
+        "height": 240,
+        "width": 360
+      },
+      "id": "test-note-001",
+      "name": "Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1000,
+        60
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Define Test Scenarios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Define Test Scenarios": {
+      "main": [
+        [
+          {
+            "node": "Setup Mock Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup Mock Redis": {
+      "main": [
+        [
+          {
+            "node": "Execute: orders_menu_render",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute: orders_menu_render": {
+      "main": [
+        [
+          {
+            "node": "Run Assertions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run Assertions": {
+      "main": [
+        [
+          {
+            "node": "Format Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": [],
+  "triggerCount": 0,
+  "active": false
+}

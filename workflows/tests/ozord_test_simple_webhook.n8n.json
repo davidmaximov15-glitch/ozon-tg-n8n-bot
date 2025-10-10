@@ -1,0 +1,77 @@
+{
+  "name": "ozord_test_simple_webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "test-simple",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        300
+      ],
+      "webhookId": "test-simple"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      success: true,\n      message: 'Test webhook works!',\n      timestamp: new Date().toISOString(),\n      input: $input.all()\n    }\n  }\n];"
+      },
+      "id": "code-001",
+      "name": "Process",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "respond-001",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Process",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

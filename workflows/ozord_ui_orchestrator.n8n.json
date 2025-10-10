@@ -69,7 +69,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/editMessageText",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/editMessageText",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat_id, message_id: $('Redis Get UI Msg Id').first().json.value, text: $json.text, parse_mode: $json.parse_mode, reply_markup: $json.reply_markup }) }}"
@@ -87,7 +87,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://api.telegram.org/bot{{ $('Config').first().json.TELEGRAM_BOT_TOKEN }}/sendMessage",
+        "url": "=https://api.telegram.org/bot{{ $env.TELEGRAM_BOT_TOKEN }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ chat_id: $json.chat_id, text: $json.text, parse_mode: $json.parse_mode, reply_markup: $json.reply_markup }) }}"
