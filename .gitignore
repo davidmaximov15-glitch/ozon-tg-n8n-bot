@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+.ozord_mapping.json
+.n8n_url
+.test_workflow_id
+.manual_test_wf_id
